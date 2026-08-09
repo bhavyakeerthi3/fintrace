@@ -316,6 +316,21 @@ Difference: +5 correct findings and +38.5 percentage points
 
 The percentages are generated from per-finding results. Artifact generation verifies every numerator, denominator, count, and reported percentage before writing the JSON, HTML, PDF, or UI data. Any mismatch fails generation.
 
+Earlier builds displayed `55.6` and `74.9` as if they were headline accuracy percentages. They are retained only as a **composite control index**, measured in points out of 100 and not as classification accuracy:
+
+```text
+mean(
+  classification accuracy,
+  100 - false-positive rate,
+  100 - unsupported-explanation rate,
+  numeric reconciliation accuracy,
+  citation quote validity,
+  unresolved-item accuracy
+)
+```
+
+The public benchmark now leads with direct classification accuracy and places this composite index in a labeled methodology disclosure.
+
 Generated outputs:
 
 - `outputs/fintrace-benchmark-results.json` - complete measured results;

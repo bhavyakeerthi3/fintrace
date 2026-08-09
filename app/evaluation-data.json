@@ -48,6 +48,17 @@
           "denominator": 5,
           "reported_percentage": 20.0
         }
+      },
+      "composite_control_index": 55.6,
+      "composite_control_index_unit": "points out of 100; not classification accuracy",
+      "composite_control_index_formula": "mean(classification accuracy, 100 - false-positive rate, 100 - unsupported-explanation rate, numeric reconciliation accuracy, citation quote validity, unresolved-item accuracy)",
+      "composite_control_components": {
+        "classification_accuracy": 61.5,
+        "false_positive_control": 92.3,
+        "unsupported_explanation_control": 69.2,
+        "numerical_reconciliation_accuracy": 0.0,
+        "citation_quote_validity": 90.9,
+        "unresolved_item_accuracy": 20.0
       }
     },
     "four_specialists": {
@@ -87,6 +98,17 @@
           "denominator": 5,
           "reported_percentage": 20.0
         }
+      },
+      "composite_control_index": 55.6,
+      "composite_control_index_unit": "points out of 100; not classification accuracy",
+      "composite_control_index_formula": "mean(classification accuracy, 100 - false-positive rate, 100 - unsupported-explanation rate, numeric reconciliation accuracy, citation quote validity, unresolved-item accuracy)",
+      "composite_control_components": {
+        "classification_accuracy": 61.5,
+        "false_positive_control": 92.3,
+        "unsupported_explanation_control": 69.2,
+        "numerical_reconciliation_accuracy": 0.0,
+        "citation_quote_validity": 90.9,
+        "unresolved_item_accuracy": 20.0
       }
     },
     "specialists_plus_calculation": {
@@ -126,6 +148,17 @@
           "denominator": 5,
           "reported_percentage": 20.0
         }
+      },
+      "composite_control_index": 74.9,
+      "composite_control_index_unit": "points out of 100; not classification accuracy",
+      "composite_control_index_formula": "mean(classification accuracy, 100 - false-positive rate, 100 - unsupported-explanation rate, numeric reconciliation accuracy, citation quote validity, unresolved-item accuracy)",
+      "composite_control_components": {
+        "classification_accuracy": 69.2,
+        "false_positive_control": 100.0,
+        "unsupported_explanation_control": 69.2,
+        "numerical_reconciliation_accuracy": 100.0,
+        "citation_quote_validity": 90.9,
+        "unresolved_item_accuracy": 20.0
       }
     },
     "full_fintrace": {
@@ -165,6 +198,17 @@
           "denominator": 5,
           "reported_percentage": 100.0
         }
+      },
+      "composite_control_index": 100.0,
+      "composite_control_index_unit": "points out of 100; not classification accuracy",
+      "composite_control_index_formula": "mean(classification accuracy, 100 - false-positive rate, 100 - unsupported-explanation rate, numeric reconciliation accuracy, citation quote validity, unresolved-item accuracy)",
+      "composite_control_components": {
+        "classification_accuracy": 100.0,
+        "false_positive_control": 100.0,
+        "unsupported_explanation_control": 100.0,
+        "numerical_reconciliation_accuracy": 100.0,
+        "citation_quote_validity": 100.0,
+        "unresolved_item_accuracy": 100.0
       }
     }
   },

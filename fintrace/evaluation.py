@@ -113,6 +113,20 @@ def _score(outputs: list[dict[str, Any]], expected: dict[str, Mapping[str, Any]]
         "citation_quote_validity": {"numerator": valid_citations, "denominator": len(explained), "reported_percentage": metrics["citation_quote_validity"]},
         "unresolved_item_accuracy": {"numerator": unresolved_correct, "denominator": len(expected_unresolved), "reported_percentage": metrics["unresolved_item_accuracy"]},
     }
+    false_positive_rate = _percentage(false_positive, total)
+    unsupported_explanation_rate = _percentage(unsupported, total)
+    control_components = {
+        "classification_accuracy": metrics["classification_accuracy"],
+        "false_positive_control": round(100 - false_positive_rate, PERCENTAGE_PRECISION),
+        "unsupported_explanation_control": round(100 - unsupported_explanation_rate, PERCENTAGE_PRECISION),
+        "numerical_reconciliation_accuracy": metrics["numerical_reconciliation_accuracy"],
+        "citation_quote_validity": metrics["citation_quote_validity"],
+        "unresolved_item_accuracy": metrics["unresolved_item_accuracy"],
+    }
+    metrics["composite_control_index"] = round(sum(control_components.values()) / len(control_components), 1)
+    metrics["composite_control_index_unit"] = "points out of 100; not classification accuracy"
+    metrics["composite_control_index_formula"] = "mean(classification accuracy, 100 - false-positive rate, 100 - unsupported-explanation rate, numeric reconciliation accuracy, citation quote validity, unresolved-item accuracy)"
+    metrics["composite_control_components"] = control_components
     return metrics
 
 
@@ -179,6 +193,12 @@ def validate_benchmark_integrity(result: Mapping[str, Any]) -> dict[str, Any]:
             if metrics.get(name) != reported:
                 raise ValueError(f"Benchmark percentage {mode}.{name} does not match its reported metric")
             checked_percentages += 1
+        components = metrics.get("composite_control_components")
+        if not isinstance(components, Mapping) or len(components) != 6:
+            raise ValueError(f"Benchmark composite control components are missing for {mode}")
+        expected_index = round(sum(float(value) for value in components.values()) / len(components), 1)
+        if metrics.get("composite_control_index") != expected_index:
+            raise ValueError(f"Benchmark composite control index is inconsistent for {mode}")
     return {
         "status": "passed",
         "case_count": case_count,

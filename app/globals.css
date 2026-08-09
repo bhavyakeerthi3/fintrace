@@ -217,6 +217,9 @@ a { color: inherit; text-decoration: none; }
 .ablation th:first-child, .ablation td:first-child { text-align: left; text-transform: capitalize; }
 .ablation th { color: #8e9a98; font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
 .benchmark-note { max-width: 850px; margin: 25px 0 0; color: #83908e; font-size: 10px; line-height: 1.6; }
+.metric-clarification { max-width: 850px; margin-top: 15px; border: 1px solid #465354; background: #1c2c2e; }
+.metric-clarification summary { padding: 13px 15px; color: #f5b4ac; cursor: pointer; font-size: 10px; font-weight: 800; }
+.metric-clarification p { margin: 0; padding: 0 15px 15px; color: #9ca9a7; font-size: 10px; line-height: 1.65; }
 
 .single-prompt { padding: 90px 0; background: #eee5db; border-bottom: 1px solid var(--line); }
 .single-prompt-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: 1px; margin-top: 35px; border: 1px solid var(--line); background: var(--line); }

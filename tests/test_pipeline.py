@@ -195,6 +195,7 @@ class FinTraceTests(unittest.TestCase):
         self.assertEqual(baseline["correct_classifications"], 8)
         self.assertEqual(baseline["incorrect_classifications"], 5)
         self.assertEqual(baseline["classification_accuracy"], 61.5)
+        self.assertEqual(baseline["composite_control_index"], 55.6)
         self.assertEqual(fintrace["correct_classifications"], 13)
         self.assertEqual(fintrace["classification_accuracy"], 100.0)
         self.assertGreater(baseline["unsupported_explanations"], fintrace["unsupported_explanations"])
@@ -213,6 +214,7 @@ class FinTraceTests(unittest.TestCase):
         metrics = result["ablations"]["specialists_plus_calculation"]["metrics"]
         self.assertEqual(metrics["correct_classifications"], 9)
         self.assertEqual(metrics["classification_accuracy"], 69.2)
+        self.assertEqual(metrics["composite_control_index"], 74.9)
         self.assertEqual(metrics["correct_numeric_checks"], 13)
         self.assertEqual(metrics["numeric_checks"], 13)
 
