@@ -1,0 +1,565 @@
+{
+  "suite_version": "1.0.0",
+  "provider": "local-deterministic",
+  "case_count": 12,
+  "finding_count": 13,
+  "ablations": {
+    "single_prompt": {
+      "finding_count": 13,
+      "correct_classifications": 8,
+      "classification_accuracy": 61.5,
+      "false_positives": 1,
+      "false_positive_rate": 7.7,
+      "unsupported_explanations": 4,
+      "unsupported_explanation_rate": 30.8,
+      "numerical_reconciliation_accuracy": 0.0,
+      "valid_citations": 10,
+      "citation_quote_validity": 90.9,
+      "unresolved_item_accuracy": 20.0,
+      "overall_score": 55.6
+    },
+    "four_specialists": {
+      "finding_count": 13,
+      "correct_classifications": 8,
+      "classification_accuracy": 61.5,
+      "false_positives": 1,
+      "false_positive_rate": 7.7,
+      "unsupported_explanations": 4,
+      "unsupported_explanation_rate": 30.8,
+      "numerical_reconciliation_accuracy": 0.0,
+      "valid_citations": 10,
+      "citation_quote_validity": 90.9,
+      "unresolved_item_accuracy": 20.0,
+      "overall_score": 55.6
+    },
+    "specialists_plus_calculation": {
+      "finding_count": 13,
+      "correct_classifications": 9,
+      "classification_accuracy": 69.2,
+      "false_positives": 0,
+      "false_positive_rate": 0.0,
+      "unsupported_explanations": 4,
+      "unsupported_explanation_rate": 30.8,
+      "numerical_reconciliation_accuracy": 100.0,
+      "valid_citations": 10,
+      "citation_quote_validity": 90.9,
+      "unresolved_item_accuracy": 20.0,
+      "overall_score": 74.9
+    },
+    "full_fintrace": {
+      "finding_count": 13,
+      "correct_classifications": 13,
+      "classification_accuracy": 100.0,
+      "false_positives": 0,
+      "false_positive_rate": 0.0,
+      "unsupported_explanations": 0,
+      "unsupported_explanation_rate": 0.0,
+      "numerical_reconciliation_accuracy": 100.0,
+      "valid_citations": 7,
+      "citation_quote_validity": 100.0,
+      "unresolved_item_accuracy": 100.0,
+      "overall_score": 100.0
+    }
+  },
+  "comparisons": [
+    {
+      "case_id": "B01",
+      "title": "Unexplained growth gap",
+      "input": {
+        "claims": [
+          "Organic growth was 23 percent."
+        ],
+        "category": "no_explanation"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B01-F1",
+          "classification": "unresolved",
+          "computed_value": null,
+          "explanation_quote": "",
+          "citation_valid": null
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B01-F1",
+          "classification": "unresolved",
+          "computed_value": 12.73,
+          "explanation_quote": "",
+          "citation_valid": null
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B01-F1",
+          "classification": "unresolved"
+        }
+      ],
+      "baseline_correct": true,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": false,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B02",
+      "title": "Currency effect",
+      "input": {
+        "claims": [
+          "Constant-currency revenue was 105 million dollars."
+        ],
+        "category": "currency"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B02-F1",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "Constant-currency revenue adds a 5 million dollar foreign-exchange translation effect to reported revenue.",
+          "citation_valid": true
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B02-F1",
+          "classification": "explained",
+          "computed_value": 100.0,
+          "explanation_quote": "Constant-currency revenue adds a 5 million dollar foreign-exchange translation effect to reported revenue.",
+          "citation_valid": true
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B02-F1",
+          "classification": "explained"
+        }
+      ],
+      "baseline_correct": true,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": false,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B03",
+      "title": "Acquisition contribution",
+      "input": {
+        "claims": [
+          "Combined revenue reached 120 million dollars."
+        ],
+        "category": "acquisition"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B03-F1",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "The acquired Atlas business contributed 20 million dollars of revenue during the period.",
+          "citation_valid": true
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B03-F1",
+          "classification": "explained",
+          "computed_value": 100.0,
+          "explanation_quote": "The acquired Atlas business contributed 20 million dollars of revenue during the period.",
+          "citation_valid": true
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B03-F1",
+          "classification": "explained"
+        }
+      ],
+      "baseline_correct": true,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": false,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B04",
+      "title": "Divestiture effect",
+      "input": {
+        "claims": [
+          "Continuing-business revenue was 90 million dollars."
+        ],
+        "category": "divestiture"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B04-F1",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "The divested Delta unit contributed 10 million dollars in the prior comparison and is excluded from continuing-business revenue.",
+          "citation_valid": true
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B04-F1",
+          "classification": "explained",
+          "computed_value": 100.0,
+          "explanation_quote": "The divested Delta unit contributed 10 million dollars in the prior comparison and is excluded from continuing-business revenue.",
+          "citation_valid": true
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B04-F1",
+          "classification": "explained"
+        }
+      ],
+      "baseline_correct": true,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": false,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B05",
+      "title": "Segment reclassification",
+      "input": {
+        "claims": [
+          "Mobility segment revenue was 70 million dollars."
+        ],
+        "category": "segment_reclassification"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B05-F1",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "Ten million dollars of platform revenue was reclassified from Corporate to Mobility for all periods presented.",
+          "citation_valid": true
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B05-F1",
+          "classification": "explained",
+          "computed_value": 60.0,
+          "explanation_quote": "Ten million dollars of platform revenue was reclassified from Corporate to Mobility for all periods presented.",
+          "citation_valid": true
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B05-F1",
+          "classification": "explained"
+        }
+      ],
+      "baseline_correct": true,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": false,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B06",
+      "title": "Accounting policy change",
+      "input": {
+        "claims": [
+          "Revenue under the revised policy was 55 million dollars."
+        ],
+        "category": "policy_change"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B06-F1",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "Adoption of the revised contract policy increased current-period revenue by 5 million dollars.",
+          "citation_valid": true
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B06-F1",
+          "classification": "explained",
+          "computed_value": 50.0,
+          "explanation_quote": "Adoption of the revised contract policy increased current-period revenue by 5 million dollars.",
+          "citation_valid": true
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B06-F1",
+          "classification": "explained"
+        }
+      ],
+      "baseline_correct": true,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": false,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B07",
+      "title": "One-time adjustment",
+      "input": {
+        "claims": [
+          "Adjusted free cash flow was 85 million dollars."
+        ],
+        "category": "one_time_adjustment"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B07-F1",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "Adjusted free cash flow adds back 23 million dollars of cash restructuring payments.",
+          "citation_valid": true
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B07-F1",
+          "classification": "explained",
+          "computed_value": 62.0,
+          "explanation_quote": "Adjusted free cash flow adds back 23 million dollars of cash restructuring payments.",
+          "citation_valid": true
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B07-F1",
+          "classification": "explained"
+        }
+      ],
+      "baseline_correct": true,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": false,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B08",
+      "title": "Within tolerance",
+      "input": {
+        "claims": [
+          "Operating margin was approximately 13 percent."
+        ],
+        "category": "within_tolerance"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B08-F1",
+          "classification": "unresolved",
+          "computed_value": null,
+          "explanation_quote": "",
+          "citation_valid": null
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B08-F1",
+          "classification": "aligned",
+          "computed_value": 12.9,
+          "explanation_quote": "",
+          "citation_valid": null
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B08-F1",
+          "classification": "aligned"
+        }
+      ],
+      "baseline_correct": false,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": false,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": true,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B09",
+      "title": "Irrelevant disclosure",
+      "input": {
+        "claims": [
+          "Revenue was 130 million dollars."
+        ],
+        "category": "irrelevant_disclosure"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B09-F1",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "A 30 million dollar revolving credit facility remained undrawn at quarter end.",
+          "citation_valid": true
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B09-F1",
+          "classification": "unresolved",
+          "computed_value": 100.0,
+          "explanation_quote": "",
+          "citation_valid": null
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B09-F1",
+          "classification": "unresolved"
+        }
+      ],
+      "baseline_correct": false,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": true,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B10",
+      "title": "Generic disclosure",
+      "input": {
+        "claims": [
+          "Revenue increased to 115 million dollars."
+        ],
+        "category": "generic_disclosure"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B10-F1",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "Results may be affected by currency movements, acquisitions, market conditions, and changes in customer demand.",
+          "citation_valid": true
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B10-F1",
+          "classification": "unresolved",
+          "computed_value": 100.0,
+          "explanation_quote": "",
+          "citation_valid": null
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B10-F1",
+          "classification": "unresolved"
+        }
+      ],
+      "baseline_correct": false,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": true,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B11",
+      "title": "Invalid model quotation",
+      "input": {
+        "claims": [
+          "Adjusted profit was 110 million dollars."
+        ],
+        "category": "invalid_quote"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B11-F1",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "A 10 million dollar adjustment reconciles adjusted profit to the filed amount.",
+          "citation_valid": false
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B11-F1",
+          "classification": "unresolved",
+          "computed_value": 100.0,
+          "explanation_quote": "",
+          "citation_valid": null
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B11-F1",
+          "classification": "unresolved"
+        }
+      ],
+      "baseline_correct": false,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": true,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    },
+    {
+      "case_id": "B12",
+      "title": "Overlapping evidence",
+      "input": {
+        "claims": [
+          "Adjusted EBITDA was 48 million dollars.",
+          "Adjusted free cash flow was 45 million dollars."
+        ],
+        "category": "overlapping_evidence"
+      },
+      "baseline_output": [
+        {
+          "finding_id": "B12-F1",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "Adjusted EBITDA adds back 8 million dollars of restructuring expense; the same program required 3 million dollars of cash payments.",
+          "citation_valid": true
+        },
+        {
+          "finding_id": "B12-F2",
+          "classification": "explained",
+          "computed_value": null,
+          "explanation_quote": "Adjusted EBITDA adds back 8 million dollars of restructuring expense; the same program required 3 million dollars of cash payments.",
+          "citation_valid": true
+        }
+      ],
+      "fintrace_output": [
+        {
+          "finding_id": "B12-F1",
+          "classification": "explained",
+          "computed_value": 40.0,
+          "explanation_quote": "Adjusted EBITDA adds back 8 million dollars of restructuring expense; the same program required 3 million dollars of cash payments.",
+          "citation_valid": true
+        },
+        {
+          "finding_id": "B12-F2",
+          "classification": "unresolved",
+          "computed_value": 40.0,
+          "explanation_quote": "",
+          "citation_valid": null
+        }
+      ],
+      "expected_result": [
+        {
+          "finding_id": "B12-F1",
+          "classification": "explained"
+        },
+        {
+          "finding_id": "B12-F2",
+          "classification": "unresolved"
+        }
+      ],
+      "baseline_correct": false,
+      "fintrace_correct": true,
+      "baseline_unsupported_explanation": true,
+      "fintrace_unsupported_explanation": false,
+      "baseline_false_positive": false,
+      "fintrace_false_positive": false
+    }
+  ]
+}

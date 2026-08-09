@@ -8,7 +8,8 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any
 
 from .models import Reconciliation
-from .prompts import SPECIALISTS
+from .prompts import SPECIALISTS, validate_prompt_output
+from .providers import LocalDeterministicProvider, ModelProvider
 
 
 SEVERITY_ORDER = {"low": 0, "medium": 1, "high": 2, "critical": 3}
@@ -157,15 +158,24 @@ def run_specialists(
     case: Mapping[str, Any],
     reconciliations: Sequence[Reconciliation],
     model_call: ModelCall | None = None,
+    provider: ModelProvider | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     """Run four model scopes in parallel, or use the reproducible demo adapter."""
 
-    if model_call is None:
+    if model_call is None and provider is None:
         return _deterministic_specialists(case, reconciliations)
     context = {"claims": case.get("claims", []), "filing": case.get("filing", {})}
+    deterministic = _deterministic_specialists(case, reconciliations)
 
     def invoke(name: str) -> tuple[str, list[dict[str, Any]]]:
-        response = model_call(SPECIALISTS[name], context)
+        if provider is not None:
+            payload = dict(context)
+            if isinstance(provider, LocalDeterministicProvider):
+                payload["deterministic_output"] = {"findings": deterministic[name]}
+            response = provider.specialist_call(name, payload=payload)
+        else:
+            response = model_call(SPECIALISTS[name], context)  # type: ignore[misc]
+            response = validate_prompt_output(name, response)
         findings = response.get("findings", []) if isinstance(response, Mapping) else []
         if not isinstance(findings, list):
             raise ValueError(f"Specialist {name} returned an invalid findings array")
@@ -407,7 +417,9 @@ def _normalize_text(value: str) -> str:
 
 
 def validate_explanation_quotes(
-    case: Mapping[str, Any], review: Mapping[str, Sequence[Mapping[str, str]]]
+    case: Mapping[str, Any],
+    review: Mapping[str, Sequence[Mapping[str, str]]],
+    findings: Sequence[Mapping[str, Any]] | None = None,
 ) -> tuple[dict[str, list[dict[str, str]]], list[dict[str, Any]]]:
     """Verify every model-returned quote against the supplied filing corpus."""
 
@@ -421,6 +433,8 @@ def validate_explanation_quotes(
         for item in sections
         if isinstance(item, Mapping)
     ]
+    finding_by_id = {str(item.get("finding_id")): item for item in findings or []}
+    disclosures = filing.get("disclosures", []) if isinstance(filing, Mapping) else []
     validated_explained: list[dict[str, str]] = []
     unresolved = [dict(item) for item in review.get("unresolved", [])]
     validations: list[dict[str, Any]] = []
@@ -429,13 +443,23 @@ def validate_explanation_quotes(
         quote = str(item.get("explanation_quote", ""))
         normalized_quote = _normalize_text(quote)
         match = next((entry for entry in corpus if normalized_quote and normalized_quote in _normalize_text(entry["text"])), None)
-        if match:
+        finding = finding_by_id.get(finding_id)
+        claim_id = str(finding.get("claim_id", "")) if finding else ""
+        explicitly_linked = any(
+            isinstance(disclosure, Mapping)
+            and str(disclosure.get("claim_id", "")) == claim_id
+            and _normalize_text(str(disclosure.get("quote", ""))) == normalized_quote
+            for disclosure in disclosures if isinstance(disclosures, list)
+        )
+        overlap = len(_tokens(quote) & _tokens(" ".join(str(finding.get(key, "")) for key in ("claim_quote", "rationale", "issue")))) if finding else 0
+        relation_valid = explicitly_linked or overlap >= 2
+        if match and (relation_valid or not findings):
             validated_explained.append({"finding_id": finding_id, "explanation_quote": quote})
-            validations.append({"finding_id": finding_id, "quote_valid": True, "filing_location": match["location"]})
+            validations.append({"finding_id": finding_id, "quote_valid": True, "relation_valid": True, "filing_location": match["location"], "transition": "explained"})
         else:
-            error = "Quoted disclosure could not be located in the filing."
+            error = "Quoted disclosure could not be located in the filing." if not match else "Quoted disclosure was not directly connected to the finding."
             unresolved.append({"finding_id": finding_id, "reasoning": error})
-            validations.append({"finding_id": finding_id, "quote_valid": False, "validation_error": error})
+            validations.append({"finding_id": finding_id, "quote_valid": bool(match), "relation_valid": relation_valid, "validation_error": error, "transition": "explained_to_unresolved"})
     return {"explained": validated_explained, "unresolved": unresolved}, validations
 
 

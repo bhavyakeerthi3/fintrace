@@ -5,20 +5,24 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from fintrace.evaluation import evaluate_suite, load_benchmark
 from fintrace.pipeline import approve_report, run_case
-from fintrace.prompts import PROMPT_VERSION, SECOND_PASS_REVIEWER, SPECIALISTS, prompt_manifest
+from fintrace.prompts import PROMPT_VERSION, SECOND_PASS_REVIEWER, SPECIALISTS, PromptValidationError, prompt_manifest, validate_prompt_output
+from fintrace.providers import LocalDeterministicProvider
 from fintrace.reconcile import ReconciliationError, reconcile_claims
 from fintrace.stages import (
     aggregate_findings,
     cross_period_regression,
     ingest_and_align,
     parse_speaker_passages,
+    run_specialists,
     validate_explanation_quotes,
 )
 
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE = ROOT / "fixtures" / "fictional-demo.json"
+BENCHMARK = ROOT / "fixtures" / "benchmark-suite.json"
 
 
 class FinTraceTests(unittest.TestCase):
@@ -61,7 +65,7 @@ class FinTraceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "report.json"
             report = run_case(FIXTURE, output)
-            self.assertEqual(report["schema_version"], "2.0")
+            self.assertEqual(report["schema_version"], "3.0")
             self.assertEqual(len(report["stages"]), 8)
             self.assertEqual([item["finding_id"] for item in report["aggregated_findings"]], ["F-001", "F-002"])
             calculations = {item["finding_id"]: item["calculation"] for item in report["calculations"]}
@@ -75,11 +79,14 @@ class FinTraceTests(unittest.TestCase):
                     "explanation_quote": "Adjusted free cash flow excludes 23 million dollars of cash restructuring payments; the measure is operating cash flow less capital expenditures plus those payments.",
                 }],
             )
-            self.assertEqual(report["quote_validation"], [{"finding_id": "F-002", "quote_valid": True, "filing_location": "Non-GAAP reconciliation - Fictional 10-Q, p. 31"}])
+            self.assertEqual(report["quote_validation"], [{"finding_id": "F-002", "quote_valid": True, "relation_valid": True, "filing_location": "Non-GAAP reconciliation - Fictional 10-Q, p. 31", "transition": "explained"}])
             self.assertGreaterEqual(len(report["evidence_retrieval"][0]["candidate_evidence"]), 2)
             self.assertEqual([item["finding_id"] for item in report["risk_memos"]], ["F-001"])
             self.assertEqual(len(report["human_signoff"]["decisions"]), 2)
             self.assertRegex(report["integrity"], r"^sha256:[a-f0-9]{64}$")
+            self.assertEqual(report["execution"]["provider"], "LocalDeterministicProvider")
+            self.assertEqual(len(report["execution"]["executions"]), 5)
+            self.assertEqual(len(report["prompt_traces"]), 6)
 
     def test_unverifiable_explanation_becomes_unresolved(self) -> None:
         case = json.loads(FIXTURE.read_text(encoding="utf-8"))
@@ -89,6 +96,15 @@ class FinTraceTests(unittest.TestCase):
         self.assertEqual(final["explained"], [])
         self.assertEqual(final["unresolved"][0]["finding_id"], "F-009")
         self.assertFalse(validation[0]["quote_valid"])
+        self.assertEqual(validation[0]["transition"], "explained_to_unresolved")
+
+    def test_unrelated_filing_quote_is_rejected(self) -> None:
+        case = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        quote = case["filing"]["sections"][0]["text"]
+        findings = [{"finding_id": "F-009", "claim_id": "different-claim", "claim_quote": "Cash flow was 900.", "rationale": "Cash gap", "issue": "Cash flow"}]
+        final, validation = validate_explanation_quotes(case, {"explained": [{"finding_id": "F-009", "explanation_quote": quote}], "unresolved": []}, findings)
+        self.assertEqual(final["explained"], [])
+        self.assertFalse(validation[0]["relation_valid"])
 
     def test_cross_period_defaults_to_unaddressed_without_evidence(self) -> None:
         result = cross_period_regression(
@@ -129,8 +145,8 @@ class FinTraceTests(unittest.TestCase):
         self.assertIn('"explained"', SECOND_PASS_REVIEWER)
         self.assertIn('"unresolved"', SECOND_PASS_REVIEWER)
         self.assertIn('"finding_id"', SECOND_PASS_REVIEWER)
-        self.assertIn("complete filing", SECOND_PASS_REVIEWER)
-        self.assertEqual(PROMPT_VERSION, "2026-08-09.v3")
+        self.assertIn("complete supplied filing", SECOND_PASS_REVIEWER)
+        self.assertEqual(PROMPT_VERSION, "2026-08-09.v4")
         all_prompts = json.dumps(prompt_manifest()).lower()
         forbidden_terms = (
             "forensic" + " accountant",
@@ -142,6 +158,44 @@ class FinTraceTests(unittest.TestCase):
         )
         for forbidden in forbidden_terms:
             self.assertNotIn(forbidden, all_prompts)
+
+    def test_specialist_json_schema_validation(self) -> None:
+        valid = {"findings": [{"finding_id": "R-1", "claim_quote": "Revenue grew.", "filed_data_reference": "p. 2", "inconsistency": "Gap", "severity": "low", "rationale": "Filed values differ."}]}
+        self.assertEqual(validate_prompt_output("revenue", valid), valid)
+        with self.assertRaises(PromptValidationError):
+            validate_prompt_output("revenue", {"findings": [{"finding_id": "R-1"}]})
+
+    def test_invalid_model_output_is_rejected(self) -> None:
+        case = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        with self.assertRaises(PromptValidationError):
+            run_specialists(case, reconcile_claims(case), lambda _prompt, _payload: {"not_findings": []})
+
+    def test_local_provider_records_execution_metadata(self) -> None:
+        provider = LocalDeterministicProvider()
+        provider.specialist_call("revenue", payload={"deterministic_output": {"findings": []}})
+        metadata = provider.metadata()
+        self.assertEqual(metadata["model"], "local-deterministic")
+        self.assertEqual(metadata["executions"][0]["prompt_version"], "1.0.0")
+
+    def test_deterministic_runs_have_same_result_digest(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            first = run_case(FIXTURE, Path(directory) / "first.json")
+            second = run_case(FIXTURE, Path(directory) / "second.json")
+            self.assertEqual(first["result_digest"], second["result_digest"])
+
+    def test_benchmark_has_required_controlled_cases(self) -> None:
+        suite = load_benchmark(BENCHMARK)
+        self.assertEqual(len(suite["cases"]), 12)
+        self.assertEqual(sum(len(case["findings"]) for case in suite["cases"]), 13)
+
+    def test_baseline_and_benchmark_scores_are_measured(self) -> None:
+        result = evaluate_suite(BENCHMARK)
+        baseline = result["ablations"]["single_prompt"]["metrics"]
+        fintrace = result["ablations"]["full_fintrace"]["metrics"]
+        self.assertEqual(baseline["correct_classifications"], 8)
+        self.assertEqual(fintrace["correct_classifications"], 13)
+        self.assertGreater(baseline["unsupported_explanations"], fintrace["unsupported_explanations"])
+        self.assertEqual(fintrace["citation_quote_validity"], 100.0)
 
 
 if __name__ == "__main__":

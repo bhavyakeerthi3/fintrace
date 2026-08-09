@@ -7,7 +7,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .prompts import PROMPT_VERSION, SECOND_PASS_REVIEWER
+from .prompts import PROMPT_REGISTRY, PROMPT_VERSION, SECOND_PASS_REVIEWER, validate_prompt_output
+from .providers import LiveLLMProvider, LocalDeterministicProvider, ModelProvider
 from .reconcile import reconcile_claims
 from .stages import (
     ModelCall,
@@ -29,8 +30,18 @@ def _now() -> str:
 
 
 def _digest(report: dict[str, Any]) -> str:
-    canonical = {key: value for key, value in report.items() if key != "integrity"}
+    canonical = {key: value for key, value in report.items() if key not in {"integrity", "integrity_digest"}}
     encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _result_digest(report: dict[str, Any]) -> str:
+    keys = (
+        "data_classification", "company", "period", "ingestion", "specialist_findings",
+        "aggregated_findings", "reconciliations", "calculations", "evidence_retrieval",
+        "second_pass", "quote_validation", "risk_memos", "cross_period",
+    )
+    encoded = json.dumps({key: report.get(key) for key in keys}, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
@@ -50,6 +61,7 @@ def _model_second_pass(
             "filing": case.get("filing", {}),
         },
     )
+    response = validate_prompt_output("second_pass", response)
     if not isinstance(response, dict):
         raise ValueError("Second-pass reviewer returned an invalid object")
     explained = response.get("explained")
@@ -67,6 +79,7 @@ def run_case(
     output: Path,
     specialist_call: ModelCall | None = None,
     second_pass_call: ModelCall | None = None,
+    provider: ModelProvider | None = None,
 ) -> dict[str, Any]:
     """Run the complete auditable pipeline for one aligned reporting period."""
 
@@ -75,19 +88,27 @@ def run_case(
     case = json.loads(case_path.read_text(encoding="utf-8"))
     if case.get("data_classification") not in {"fictional_demo", "historical_adjudicated"}:
         raise ValueError("FinTrace accepts only fictional demos or historical adjudicated cases")
+    active_provider = provider or LocalDeterministicProvider()
 
     ingestion = ingest_and_align(case)
     reconciliations = reconcile_claims(case)
-    specialist_findings = run_specialists(case, reconciliations, specialist_call)
+    specialist_findings = run_specialists(case, reconciliations, specialist_call, None if specialist_call else active_provider)
     aggregated_findings = aggregate_findings(specialist_findings)
     calculations = attach_calculations(case, aggregated_findings, reconciliations)
     evidence_retrieval = retrieve_filing_evidence(case, aggregated_findings)
-    initial_review = (
-        _model_second_pass(second_pass_call, case, aggregated_findings, calculations, evidence_retrieval)
-        if second_pass_call
-        else second_pass_review(case, aggregated_findings, calculations)
-    )
-    final_review, quote_validation = validate_explanation_quotes(case, initial_review)
+    if second_pass_call:
+        initial_review = _model_second_pass(second_pass_call, case, aggregated_findings, calculations, evidence_retrieval)
+    elif isinstance(active_provider, LiveLLMProvider):
+        initial_review = active_provider.second_pass_call(payload={
+            "findings": aggregated_findings,
+            "calculations": calculations,
+            "candidate_evidence": evidence_retrieval,
+            "filing": case.get("filing", {}),
+        })
+    else:
+        deterministic_review = second_pass_review(case, aggregated_findings, calculations)
+        initial_review = active_provider.second_pass_call(payload={"deterministic_output": deterministic_review})
+    final_review, quote_validation = validate_explanation_quotes(case, initial_review, aggregated_findings)
     risk_memos = generate_risk_memos(final_review, aggregated_findings, calculations, evidence_retrieval)
     cross_period = cross_period_regression(final_review["unresolved"], case.get("later_period"))
     human_signoff = pending_human_review(final_review)
@@ -95,10 +116,17 @@ def run_case(
     candidate_count = sum(len(items) for items in specialist_findings.values())
     valid_quotes = sum(item["quote_valid"] for item in quote_validation)
     report: dict[str, Any] = {
-        "schema_version": "2.0",
+        "schema_version": "3.0",
         "run_id": f"fintrace-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}",
+        "timestamp": started_at,
         "data_classification": case["data_classification"],
         "prompt_version": PROMPT_VERSION,
+        "prompt_versions": {name: spec["version"] for name, spec in PROMPT_REGISTRY.items()},
+        "fixture_version": case.get("fixture_version", "1.0.0"),
+        "calculation_version": "1.0.0",
+        "retrieval_version": "1.0.0",
+        "model": active_provider.model,
+        "execution": active_provider.metadata(),
         "started_at": started_at,
         "finished_at": _now(),
         "duration_ms": round((time.perf_counter() - started) * 1000),
@@ -125,8 +153,23 @@ def run_case(
         "risk_memos": risk_memos,
         "cross_period": cross_period,
         "human_signoff": human_signoff,
+        "human_review": human_signoff,
     }
-    report["integrity"] = _digest(report)
+    report["prompt_traces"] = [
+        {
+            "stage": name,
+            "model": active_provider.model if name != "aggregator" else "deterministic-deduplicator",
+            "prompt_version": spec["version"],
+            "system_instruction": spec["system_instruction"],
+            "input": {"contract": spec["input_contract"], "case": case.get("case_id", case.get("company"))},
+            "expected_json_schema": spec["output_schema"],
+            "output": specialist_findings.get(name, []) if name in specialist_findings else aggregated_findings if name == "aggregator" else final_review,
+        }
+        for name, spec in PROMPT_REGISTRY.items()
+    ]
+    report["result_digest"] = _result_digest(report)
+    report["integrity_digest"] = _digest(report)
+    report["integrity"] = report["integrity_digest"]
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return report
@@ -167,6 +210,8 @@ def approve_report(
                     "evidence": f"Per-finding decisions recorded by {analyst}",
                 }
             )
-    report["integrity"] = _digest(report)
+    report["human_review"] = signoff
+    report["integrity_digest"] = _digest(report)
+    report["integrity"] = report["integrity_digest"]
     path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return report

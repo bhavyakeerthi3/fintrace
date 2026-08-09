@@ -4,8 +4,10 @@ import argparse
 import json
 from pathlib import Path
 
+from .evaluation import evaluate_suite
 from .pipeline import approve_report, run_case
 from .prompts import prompt_manifest
+from .providers import LiveLLMProvider, LocalDeterministicProvider
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -15,6 +17,14 @@ def build_parser() -> argparse.ArgumentParser:
     demo = commands.add_parser("demo")
     demo.add_argument("--case", type=Path, default=Path("fixtures/fictional-demo.json"))
     demo.add_argument("--output", type=Path, default=Path("outputs/fintrace-demo-report.json"))
+    demo.add_argument("--provider", choices=("local", "live"), default="local")
+    demo.add_argument("--model", default="gpt-5-mini")
+    demo.add_argument("--temperature", type=float, default=0.0)
+    demo.add_argument("--token-limit", type=int, default=1800)
+
+    benchmark = commands.add_parser("benchmark")
+    benchmark.add_argument("--suite", type=Path, default=Path("fixtures/benchmark-suite.json"))
+    benchmark.add_argument("--output", type=Path, default=Path("outputs/fintrace-benchmark-results.json"))
 
     approve = commands.add_parser("approve")
     approve.add_argument("report", type=Path)
@@ -31,7 +41,8 @@ def main() -> int:
     args = build_parser().parse_args()
     try:
         if args.command == "demo":
-            report = run_case(args.case, args.output)
+            provider = LocalDeterministicProvider() if args.provider == "local" else LiveLLMProvider(args.model, args.temperature, args.token_limit)
+            report = run_case(args.case, args.output, provider=provider)
             print(json.dumps({
                 "report": str(args.output),
                 "aligned": sum(item["status"] == "aligned" for item in report["reconciliations"]),
@@ -39,6 +50,18 @@ def main() -> int:
                 "explained": len(report["second_pass"]["explained"]),
                 "unresolved": len(report["second_pass"]["unresolved"]),
                 "integrity": report["integrity"],
+            }, indent=2))
+            return 0
+        if args.command == "benchmark":
+            result = evaluate_suite(args.suite)
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+            print(json.dumps({
+                "output": str(args.output),
+                "cases": result["case_count"],
+                "findings": result["finding_count"],
+                "baseline_score": result["ablations"]["single_prompt"]["metrics"]["overall_score"],
+                "fintrace_score": result["ablations"]["full_fintrace"]["metrics"]["overall_score"],
             }, indent=2))
             return 0
         if args.command == "approve":

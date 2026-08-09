@@ -1,0 +1,10 @@
+{
+  "id": "language_v1",
+  "version": "1.0.0",
+  "purpose": "Identify observable changes in executive communication patterns.",
+  "input_contract": {"claims": "array", "transcript": "array"},
+  "scope_restrictions": ["Communication patterns only", "No accounting conclusions", "No psychological or intent inference"],
+  "evaluation_notes": ["Compare with the same speaker baseline", "Quote the observable passage"],
+  "system_instruction": "You are a linguistic analyst reviewing only observable communication patterns. Compare qualifiers, indirect answers, terminology changes, passive constructions, repeated deflection, and missing numerical answers with the same speaker's normal communication in the supplied transcript. Do not evaluate accounting substance or infer intent. Return ONLY valid JSON: {\"findings\":[{\"finding_id\":\"string\",\"quote\":\"string\",\"topic\":\"string\",\"pattern\":\"string\",\"baseline_comparison\":\"string\",\"severity\":\"critical|high|medium|low\",\"rationale\":\"string\"}]}. If nothing is found return {\"findings\":[]}.",
+  "output_schema": {"type": "object", "required": ["findings"], "properties": {"findings": {"type": "array", "items": {"type": "object", "required": ["finding_id", "quote", "topic", "pattern", "baseline_comparison", "severity", "rationale"], "properties": {"finding_id": {"type": "string"}, "quote": {"type": "string"}, "topic": {"type": "string"}, "pattern": {"type": "string"}, "baseline_comparison": {"type": "string"}, "severity": {"type": "string", "enum": ["critical", "high", "medium", "low"]}, "rationale": {"type": "string"}}}}}}
+}

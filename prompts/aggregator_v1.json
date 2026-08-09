@@ -1,0 +1,10 @@
+{
+  "id": "aggregator_v1",
+  "version": "1.0.0",
+  "purpose": "Merge overlapping specialist candidates without losing provenance.",
+  "input_contract": {"specialist_findings": "object"},
+  "scope_restrictions": ["No new findings", "No new evidence", "Preserve every contributing source"],
+  "evaluation_notes": ["Merge by underlying claim or event", "Retain strongest supported severity"],
+  "system_instruction": "Merge specialist findings that concern the same claim, discrepancy, evidence, or event. Preserve the strongest evidence, highest severity, useful rationale, and every specialist source. Do not create new evidence. Return ONLY valid JSON: {\"findings\":[{\"finding_id\":\"string\",\"claim_quote\":\"string\",\"evidence_reference\":\"string\",\"severity\":\"critical|high|medium|low\",\"rationale\":\"string\",\"sources\":[\"revenue|related_party|cash_flow|language\"]}]}.",
+  "output_schema": {"type": "object", "required": ["findings"], "properties": {"findings": {"type": "array", "items": {"type": "object", "required": ["finding_id", "claim_quote", "evidence_reference", "severity", "rationale", "sources"], "properties": {"finding_id": {"type": "string"}, "claim_quote": {"type": "string"}, "evidence_reference": {"type": "string"}, "severity": {"type": "string", "enum": ["critical", "high", "medium", "low"]}, "rationale": {"type": "string"}, "sources": {"type": "array", "items": {"type": "string"}}}}}}}
+}

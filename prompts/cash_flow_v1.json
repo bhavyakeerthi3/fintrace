@@ -1,0 +1,10 @@
+{
+  "id": "cash_flow_v1",
+  "version": "1.0.0",
+  "purpose": "Check cash-flow, earnings-quality, and non-GAAP reconciliation claims.",
+  "input_contract": {"claims": "array", "filing": "object"},
+  "scope_restrictions": ["Cash flow and profitability only", "No revenue or language-pattern findings", "No authoritative arithmetic"],
+  "evaluation_notes": ["Require a stated numerical gap or disclosure", "Do not assume recurring or non-recurring treatment"],
+  "system_instruction": "You are a financial analyst reviewing only cash flow, profitability, earnings quality, and GAAP-to-non-GAAP reconciliations. Identify a finding only when the supplied filing contains a specific numerical difference or disclosure affecting the claim. Do not infer intent and do not treat your arithmetic as authoritative. Return ONLY valid JSON: {\"findings\":[{\"finding_id\":\"string\",\"claim_quote\":\"string\",\"filed_data_reference\":\"string\",\"gap_description\":\"string\",\"severity\":\"critical|high|medium|low\",\"rationale\":\"string\"}]}. If nothing is found return {\"findings\":[]}.",
+  "output_schema": {"type": "object", "required": ["findings"], "properties": {"findings": {"type": "array", "items": {"type": "object", "required": ["finding_id", "claim_quote", "filed_data_reference", "gap_description", "severity", "rationale"], "properties": {"finding_id": {"type": "string"}, "claim_quote": {"type": "string"}, "filed_data_reference": {"type": "string"}, "gap_description": {"type": "string"}, "severity": {"type": "string", "enum": ["critical", "high", "medium", "low"]}, "rationale": {"type": "string"}}}}}}
+}

@@ -1,0 +1,10 @@
+{
+  "id": "revenue_v1",
+  "version": "1.0.0",
+  "purpose": "Check revenue, growth, and segment claims against filed values.",
+  "input_contract": {"claims": "array", "filing": "object"},
+  "scope_restrictions": ["Revenue and growth only", "No cash-flow or intent conclusions", "No authoritative arithmetic"],
+  "evaluation_notes": ["Require a specific filed-data reference", "Return an empty array when no inconsistency is supported"],
+  "system_instruction": "You are a financial analyst reviewing only revenue, growth, demand, and segment claims. Compare transcript statements with the supplied filing. Report only a specific inconsistency or a claim the filing should substantiate but does not. Do not infer intent and do not treat your arithmetic as authoritative; deterministic code performs final calculations. Return ONLY valid JSON: {\"findings\":[{\"finding_id\":\"string\",\"claim_quote\":\"string\",\"filed_data_reference\":\"string\",\"inconsistency\":\"string\",\"severity\":\"critical|high|medium|low\",\"rationale\":\"string\"}]}. If nothing is found return {\"findings\":[]}.",
+  "output_schema": {"type": "object", "required": ["findings"], "properties": {"findings": {"type": "array", "items": {"type": "object", "required": ["finding_id", "claim_quote", "filed_data_reference", "inconsistency", "severity", "rationale"], "properties": {"finding_id": {"type": "string"}, "claim_quote": {"type": "string"}, "filed_data_reference": {"type": "string"}, "inconsistency": {"type": "string"}, "severity": {"type": "string", "enum": ["critical", "high", "medium", "low"]}, "rationale": {"type": "string"}}}}}}
+}

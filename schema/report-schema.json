@@ -3,93 +3,48 @@
   "title": "FinTrace auditable review report",
   "type": "object",
   "required": [
-    "schema_version",
-    "run_id",
-    "data_classification",
-    "company",
-    "period",
-    "stages",
-    "ingestion",
-    "specialist_findings",
-    "aggregated_findings",
-    "reconciliations",
-    "calculations",
-    "evidence_retrieval",
-    "second_pass",
-    "quote_validation",
-    "risk_memos",
-    "cross_period",
-    "human_signoff",
-    "integrity"
+    "schema_version", "run_id", "timestamp", "data_classification", "company", "period",
+    "model", "prompt_versions", "fixture_version", "calculation_version", "retrieval_version",
+    "execution", "stages", "ingestion", "specialist_findings", "aggregated_findings",
+    "reconciliations", "calculations", "evidence_retrieval", "second_pass", "quote_validation",
+    "risk_memos", "cross_period", "human_signoff", "human_review", "prompt_traces",
+    "result_digest", "integrity_digest", "integrity"
   ],
   "properties": {
-    "schema_version": { "const": "2.0" },
-    "data_classification": { "enum": ["fictional_demo", "historical_adjudicated"] },
-    "stages": { "type": "array", "minItems": 8 },
-    "ingestion": {
-      "type": "object",
-      "required": ["claims"],
-      "properties": { "claims": { "type": "array" } }
-    },
-    "specialist_findings": {
-      "type": "object",
-      "required": ["revenue", "related_party", "cash_flow", "language"]
-    },
-    "aggregated_findings": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["finding_id", "claim_quote", "evidence_reference", "severity", "rationale", "sources"]
-      }
-    },
-    "reconciliations": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["finding_id", "claimed_value", "computed_value", "gap", "tolerance", "status"],
-        "properties": { "status": { "enum": ["aligned", "flagged"] } }
-      }
-    },
-    "calculations": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["finding_id", "calculation"]
-      }
-    },
-    "evidence_retrieval": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["finding_id", "candidate_evidence"]
-      }
-    },
-    "second_pass": {
-      "type": "object",
-      "required": ["explained", "unresolved"],
-      "properties": {
-        "explained": { "type": "array" },
-        "unresolved": { "type": "array" }
-      }
-    },
-    "quote_validation": { "type": "array" },
-    "risk_memos": { "type": "array" },
-    "cross_period": { "type": "array" },
-    "human_signoff": {
+    "schema_version": {"const": "3.0"},
+    "data_classification": {"enum": ["fictional_demo", "historical_adjudicated"]},
+    "model": {"type": "string"},
+    "prompt_versions": {"type": "object"},
+    "fixture_version": {"type": "string"},
+    "calculation_version": {"type": "string"},
+    "retrieval_version": {"type": "string"},
+    "execution": {"type": "object", "required": ["provider", "model", "temperature", "token_limit", "executions"]},
+    "stages": {"type": "array", "minItems": 8},
+    "ingestion": {"type": "object", "required": ["claims"], "properties": {"claims": {"type": "array"}}},
+    "specialist_findings": {"type": "object", "required": ["revenue", "related_party", "cash_flow", "language"]},
+    "aggregated_findings": {"type": "array", "items": {"type": "object", "required": ["finding_id", "claim_quote", "evidence_reference", "severity", "rationale", "sources"]}},
+    "reconciliations": {"type": "array", "items": {"type": "object", "required": ["finding_id", "claimed_value", "computed_value", "gap", "tolerance", "status"], "properties": {"status": {"enum": ["aligned", "flagged"]}}}},
+    "calculations": {"type": "array", "items": {"type": "object", "required": ["finding_id", "calculation"]}},
+    "evidence_retrieval": {"type": "array", "items": {"type": "object", "required": ["finding_id", "candidate_evidence"]}},
+    "second_pass": {"type": "object", "required": ["explained", "unresolved"], "properties": {"explained": {"type": "array"}, "unresolved": {"type": "array"}}},
+    "quote_validation": {"type": "array"},
+    "risk_memos": {"type": "array"},
+    "cross_period": {"type": "array"},
+    "prompt_traces": {"type": "array", "minItems": 6},
+    "human_signoff": {"$ref": "#/$defs/humanReview"},
+    "human_review": {"$ref": "#/$defs/humanReview"},
+    "result_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "integrity_digest": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "integrity": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  },
+  "$defs": {
+    "humanReview": {
       "type": "object",
       "required": ["status", "analyst", "reviewed_at", "decisions"],
       "properties": {
-        "status": { "enum": ["pending", "complete"] },
-        "decisions": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["finding_id", "decision", "analyst_note"],
-            "properties": { "decision": { "enum": ["accept", "reject", "needs_review"] } }
-          }
-        }
+        "status": {"enum": ["pending", "complete"]},
+        "decisions": {"type": "array", "items": {"type": "object", "required": ["finding_id", "decision", "analyst_note"], "properties": {"decision": {"enum": ["accept", "reject", "needs_review"]}}}}
       }
-    },
-    "integrity": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }
+    }
   }
 }

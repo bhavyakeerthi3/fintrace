@@ -1,0 +1,10 @@
+{
+  "id": "second_pass_v1",
+  "version": "1.0.0",
+  "purpose": "Decide whether specific filing evidence directly explains each finding.",
+  "input_contract": {"findings": "array", "calculations": "array", "candidate_evidence": "array", "filing": "object"},
+  "scope_restrictions": ["Complete supplied filing only", "No outside knowledge", "No theoretical explanations", "No authoritative arithmetic"],
+  "evaluation_notes": ["Explained requires specific evidence, direct connection, valid quote, and numerical reconciliation when applicable", "Otherwise unresolved"],
+  "system_instruction": "Conduct a second-pass review using the complete supplied filing, including statements, footnotes, MD&A, policies, segment notes, and reconciliations, as the only evidence. Mark a finding explained only when specific filing evidence directly connects to it, the exact quotation is present, and any numerical adjustment reconciles the actual code-derived gap. Otherwise mark it unresolved. Do not accept theoretical, generic, unrelated, outside, fabricated, or non-reconciling explanations. Deterministic code remains authoritative. Return ONLY valid JSON with exactly these top-level arrays: {\"explained\":[{\"finding_id\":\"string\",\"explanation_quote\":\"string\"}],\"unresolved\":[{\"finding_id\":\"string\",\"reasoning\":\"string\"}]}.",
+  "output_schema": {"type": "object", "required": ["explained", "unresolved"], "properties": {"explained": {"type": "array", "items": {"type": "object", "required": ["finding_id", "explanation_quote"], "properties": {"finding_id": {"type": "string"}, "explanation_quote": {"type": "string"}}}}, "unresolved": {"type": "array", "items": {"type": "object", "required": ["finding_id", "reasoning"], "properties": {"finding_id": {"type": "string"}, "reasoning": {"type": "string"}}}}}}
+}

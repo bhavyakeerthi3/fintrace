@@ -1,0 +1,416 @@
+[
+  {
+    "stage": "revenue",
+    "id": "revenue_v1",
+    "version": "1.0.0",
+    "purpose": "Check revenue, growth, and segment claims against filed values.",
+    "system_instruction": "You are a financial analyst reviewing only revenue, growth, demand, and segment claims. Compare transcript statements with the supplied filing. Report only a specific inconsistency or a claim the filing should substantiate but does not. Do not infer intent and do not treat your arithmetic as authoritative; deterministic code performs final calculations. Return ONLY valid JSON: {\"findings\":[{\"finding_id\":\"string\",\"claim_quote\":\"string\",\"filed_data_reference\":\"string\",\"inconsistency\":\"string\",\"severity\":\"critical|high|medium|low\",\"rationale\":\"string\"}]}. If nothing is found return {\"findings\":[]}.",
+    "input_contract": {
+      "claims": "array",
+      "filing": "object"
+    },
+    "expected_json_schema": {
+      "type": "object",
+      "required": [
+        "findings"
+      ],
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "finding_id",
+              "claim_quote",
+              "filed_data_reference",
+              "inconsistency",
+              "severity",
+              "rationale"
+            ],
+            "properties": {
+              "finding_id": {
+                "type": "string"
+              },
+              "claim_quote": {
+                "type": "string"
+              },
+              "filed_data_reference": {
+                "type": "string"
+              },
+              "inconsistency": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "medium",
+                  "low"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "scope_restrictions": [
+      "Revenue and growth only",
+      "No cash-flow or intent conclusions",
+      "No authoritative arithmetic"
+    ],
+    "sample_output": {
+      "findings": []
+    }
+  },
+  {
+    "stage": "cash_flow",
+    "id": "cash_flow_v1",
+    "version": "1.0.0",
+    "purpose": "Check cash-flow, earnings-quality, and non-GAAP reconciliation claims.",
+    "system_instruction": "You are a financial analyst reviewing only cash flow, profitability, earnings quality, and GAAP-to-non-GAAP reconciliations. Identify a finding only when the supplied filing contains a specific numerical difference or disclosure affecting the claim. Do not infer intent and do not treat your arithmetic as authoritative. Return ONLY valid JSON: {\"findings\":[{\"finding_id\":\"string\",\"claim_quote\":\"string\",\"filed_data_reference\":\"string\",\"gap_description\":\"string\",\"severity\":\"critical|high|medium|low\",\"rationale\":\"string\"}]}. If nothing is found return {\"findings\":[]}.",
+    "input_contract": {
+      "claims": "array",
+      "filing": "object"
+    },
+    "expected_json_schema": {
+      "type": "object",
+      "required": [
+        "findings"
+      ],
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "finding_id",
+              "claim_quote",
+              "filed_data_reference",
+              "gap_description",
+              "severity",
+              "rationale"
+            ],
+            "properties": {
+              "finding_id": {
+                "type": "string"
+              },
+              "claim_quote": {
+                "type": "string"
+              },
+              "filed_data_reference": {
+                "type": "string"
+              },
+              "gap_description": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "medium",
+                  "low"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "scope_restrictions": [
+      "Cash flow and profitability only",
+      "No revenue or language-pattern findings",
+      "No authoritative arithmetic"
+    ],
+    "sample_output": {
+      "findings": []
+    }
+  },
+  {
+    "stage": "related_party",
+    "id": "related_party_v1",
+    "version": "1.0.0",
+    "purpose": "Cross-reference related-party arrangements, commitments, and guarantees.",
+    "system_instruction": "You are a financial analyst reviewing only related-party transactions, guarantees, commitments, affiliates, and off-balance-sheet arrangements. Report a finding only when a specific supplied filing disclosure differs from, qualifies, or adds material context to a management statement. Do not infer intent. Return ONLY valid JSON: {\"findings\":[{\"finding_id\":\"string\",\"claim_quote\":\"string\",\"footnote_reference\":\"string\",\"concern\":\"string\",\"severity\":\"critical|high|medium|low\",\"rationale\":\"string\"}]}. If nothing is found return {\"findings\":[]}.",
+    "input_contract": {
+      "claims": "array",
+      "filing": "object"
+    },
+    "expected_json_schema": {
+      "type": "object",
+      "required": [
+        "findings"
+      ],
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "finding_id",
+              "claim_quote",
+              "footnote_reference",
+              "concern",
+              "severity",
+              "rationale"
+            ],
+            "properties": {
+              "finding_id": {
+                "type": "string"
+              },
+              "claim_quote": {
+                "type": "string"
+              },
+              "footnote_reference": {
+                "type": "string"
+              },
+              "concern": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "medium",
+                  "low"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "scope_restrictions": [
+      "Related parties, guarantees, and commitments only",
+      "No unsupported legal conclusions",
+      "No intent conclusions"
+    ],
+    "sample_output": {
+      "findings": []
+    }
+  },
+  {
+    "stage": "language",
+    "id": "language_v1",
+    "version": "1.0.0",
+    "purpose": "Identify observable changes in executive communication patterns.",
+    "system_instruction": "You are a linguistic analyst reviewing only observable communication patterns. Compare qualifiers, indirect answers, terminology changes, passive constructions, repeated deflection, and missing numerical answers with the same speaker's normal communication in the supplied transcript. Do not evaluate accounting substance or infer intent. Return ONLY valid JSON: {\"findings\":[{\"finding_id\":\"string\",\"quote\":\"string\",\"topic\":\"string\",\"pattern\":\"string\",\"baseline_comparison\":\"string\",\"severity\":\"critical|high|medium|low\",\"rationale\":\"string\"}]}. If nothing is found return {\"findings\":[]}.",
+    "input_contract": {
+      "claims": "array",
+      "transcript": "array"
+    },
+    "expected_json_schema": {
+      "type": "object",
+      "required": [
+        "findings"
+      ],
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "finding_id",
+              "quote",
+              "topic",
+              "pattern",
+              "baseline_comparison",
+              "severity",
+              "rationale"
+            ],
+            "properties": {
+              "finding_id": {
+                "type": "string"
+              },
+              "quote": {
+                "type": "string"
+              },
+              "topic": {
+                "type": "string"
+              },
+              "pattern": {
+                "type": "string"
+              },
+              "baseline_comparison": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "medium",
+                  "low"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "scope_restrictions": [
+      "Communication patterns only",
+      "No accounting conclusions",
+      "No psychological or intent inference"
+    ],
+    "sample_output": {
+      "findings": []
+    }
+  },
+  {
+    "stage": "aggregator",
+    "id": "aggregator_v1",
+    "version": "1.0.0",
+    "purpose": "Merge overlapping specialist candidates without losing provenance.",
+    "system_instruction": "Merge specialist findings that concern the same claim, discrepancy, evidence, or event. Preserve the strongest evidence, highest severity, useful rationale, and every specialist source. Do not create new evidence. Return ONLY valid JSON: {\"findings\":[{\"finding_id\":\"string\",\"claim_quote\":\"string\",\"evidence_reference\":\"string\",\"severity\":\"critical|high|medium|low\",\"rationale\":\"string\",\"sources\":[\"revenue|related_party|cash_flow|language\"]}]}.",
+    "input_contract": {
+      "specialist_findings": "object"
+    },
+    "expected_json_schema": {
+      "type": "object",
+      "required": [
+        "findings"
+      ],
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "finding_id",
+              "claim_quote",
+              "evidence_reference",
+              "severity",
+              "rationale",
+              "sources"
+            ],
+            "properties": {
+              "finding_id": {
+                "type": "string"
+              },
+              "claim_quote": {
+                "type": "string"
+              },
+              "evidence_reference": {
+                "type": "string"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "critical",
+                  "high",
+                  "medium",
+                  "low"
+                ]
+              },
+              "rationale": {
+                "type": "string"
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "scope_restrictions": [
+      "No new findings",
+      "No new evidence",
+      "Preserve every contributing source"
+    ],
+    "sample_output": {
+      "findings": []
+    }
+  },
+  {
+    "stage": "second_pass",
+    "id": "second_pass_v1",
+    "version": "1.0.0",
+    "purpose": "Decide whether specific filing evidence directly explains each finding.",
+    "system_instruction": "Conduct a second-pass review using the complete supplied filing, including statements, footnotes, MD&A, policies, segment notes, and reconciliations, as the only evidence. Mark a finding explained only when specific filing evidence directly connects to it, the exact quotation is present, and any numerical adjustment reconciles the actual code-derived gap. Otherwise mark it unresolved. Do not accept theoretical, generic, unrelated, outside, fabricated, or non-reconciling explanations. Deterministic code remains authoritative. Return ONLY valid JSON with exactly these top-level arrays: {\"explained\":[{\"finding_id\":\"string\",\"explanation_quote\":\"string\"}],\"unresolved\":[{\"finding_id\":\"string\",\"reasoning\":\"string\"}]}.",
+    "input_contract": {
+      "findings": "array",
+      "calculations": "array",
+      "candidate_evidence": "array",
+      "filing": "object"
+    },
+    "expected_json_schema": {
+      "type": "object",
+      "required": [
+        "explained",
+        "unresolved"
+      ],
+      "properties": {
+        "explained": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "finding_id",
+              "explanation_quote"
+            ],
+            "properties": {
+              "finding_id": {
+                "type": "string"
+              },
+              "explanation_quote": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "unresolved": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "finding_id",
+              "reasoning"
+            ],
+            "properties": {
+              "finding_id": {
+                "type": "string"
+              },
+              "reasoning": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "scope_restrictions": [
+      "Complete supplied filing only",
+      "No outside knowledge",
+      "No theoretical explanations",
+      "No authoritative arithmetic"
+    ],
+    "sample_output": {
+      "explained": [],
+      "unresolved": [
+        {
+          "finding_id": "B01-F1",
+          "reasoning": "No filing disclosure directly reconciles the numerical difference."
+        }
+      ]
+    }
+  }
+]

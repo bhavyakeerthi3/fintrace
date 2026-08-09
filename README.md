@@ -1,6 +1,24 @@
 # FinTrace
 
-**Executive claims checked against filed numbers.**
+### Executive claims checked against filed numbers.
+
+```text
+LLM finds
+    -> Code calculates
+    -> Filing explains
+    -> Validator verifies
+    -> Human decides
+```
+
+One example explains the product:
+
+```text
+Management claim:       23.00% organic growth
+Filed calculation:      (124 - 110) / 110 = 12.73%
+Difference:              10.27 percentage points
+Filing reconciliation:  none found
+Final result:            UNRESOLVED
+```
 
 FinTrace is an evidence-first financial review pipeline built for the Reverie Hacks 2026 ML Prompt Engineering track. It compares statements from an earnings call with filed financial data, recomputes numerical claims in code, searches the filing for legitimate explanations, and preserves every decision for human review.
 
@@ -42,7 +60,7 @@ FinTrace separates review into four narrow scopes:
 - related-party transactions, guarantees, and commitments;
 - observable language and response patterns.
 
-When a model provider is connected, the four calls run in parallel through the `specialist_call` hook. Each scope receives its own versioned prompt and returns structured JSON. Keeping the scopes separate reduces cross-topic contamination and makes their provenance visible.
+When a live model provider is selected, the four calls run in parallel through the provider abstraction. Each scope receives its own versioned prompt and returns schema-validated JSON. Keeping the scopes separate reduces cross-topic contamination and makes their provenance visible.
 
 The fictional demo uses a deterministic local adapter instead of an external model, so it runs without API keys and always produces reproducible results.
 
@@ -124,7 +142,7 @@ The overall sign-off remains pending until every finding has been accepted or re
 
 The Python engine is the authoritative implementation. The public Next.js page is an interactive presentation of the same versioned fictional fixture; its animation does not execute the Python pipeline in the browser.
 
-For live model execution, an application layer must provide callbacks for `specialist_call` and `second_pass_call`. Those hooks already exist, but this public demo intentionally has no model credentials or paid provider dependency.
+`ModelProvider` has two implementations: `LocalDeterministicProvider` for reproducible public runs and `LiveLLMProvider` for an OpenAI-compatible endpoint. Live execution is configured with server-side `FINTRACE_LLM_API_KEY` and optional `FINTRACE_LLM_ENDPOINT` values. Secrets are never included in reports or the Prompt Inspector.
 
 ## Demo outcomes
 
@@ -146,6 +164,9 @@ The generated `fintrace-demo-report.json` contains:
 schema_version
 run_id and timestamps
 data classification and prompt version
+model, temperature, token limit, and execution timestamps
+all registered prompt versions
+fixture, calculation, and retrieval versions
 eight stage status records
 normalized ingestion records
 four specialist outputs
@@ -175,11 +196,18 @@ fintrace/
   reconcile.py            Deterministic financial calculations
   stages.py               Ingestion through human-review stage helpers
   pipeline.py             End-to-end orchestration and integrity digest
-  prompts.py              Versioned structured-output prompt contracts
+  prompts.py              Prompt registry loader and JSON Schema checks
+  providers.py            Local and live model-provider implementations
+  evaluation.py           Baseline, ablation, and benchmark scoring
+prompts/
+  *_v1.json               Six inspectable versioned prompt contracts
 fixtures/
   fictional-demo.json     Fictional transcript, filing, and disclosures
+  benchmark-suite.json    12 controlled cases with expected outcomes
 schema/
   report-schema.json      Machine-readable report contract
+scripts/
+  generate_artifacts.py   Workflow image, UI data, HTML, and PDF generator
 tests/
   test_pipeline.py        Pipeline, safety, validation, and sign-off tests
 ```
@@ -204,6 +232,18 @@ Inspect the current model contracts:
 
 ```bash
 python -m fintrace prompts
+```
+
+Run the 12-case baseline and ablation benchmark:
+
+```bash
+python -m fintrace benchmark
+```
+
+Use a configured live provider:
+
+```bash
+python -m fintrace demo --provider live --model gpt-5-mini --temperature 0
 ```
 
 Record a decision for one finding:
@@ -237,7 +277,20 @@ npm run build
 npm audit --omit=dev
 ```
 
-The current release passes 11 Python tests, ESLint, the Next.js production build, JSON Schema validation, and the production dependency audit.
+The current release passes 18 Python tests, ESLint, the Next.js production build, JSON Schema validation, and the production dependency audit.
+
+## Controlled benchmark and samples
+
+The repository includes 12 fictional benchmark cases covering unexplained gaps, currency, acquisitions, divestitures, segment reclassification, accounting-policy changes, one-time adjustments, tolerance, irrelevant and generic disclosures, invalid quotations, and overlapping evidence.
+
+Generated outputs:
+
+- `outputs/fintrace-benchmark-results.json` - complete measured results;
+- `outputs/fintrace-ml-workflow.png` - submission-ready ML workflow;
+- `outputs/fintrace-samples.html` - case-by-case single-prompt comparison;
+- `outputs/fintrace-samples.pdf` - printable samples artifact.
+
+The current controlled run uses the local deterministic adapter. Its percentages describe only this fixture suite and are not claims about general LLM performance.
 
 ## Deployment
 
@@ -251,9 +304,9 @@ Vercel should detect the repository as Next.js. The demo requires no authenticat
 
 - The included fixture is fictional and is not evidence about a real issuer.
 - Production transcript and SEC filing parsers are not connected yet.
-- Live model providers are supported through callbacks but are not configured in the public demo.
-- Evaluation percentages shown in the interface are illustrative targets, not measured production performance.
-- Historical benchmarking requires an adjudicated case set before accuracy claims can be made.
+- Live model execution requires a separately configured API endpoint and key; the public demo uses the local provider.
+- Dashboard percentages are measured from the controlled fictional suite, not production performance estimates.
+- General accuracy claims require a larger independently adjudicated historical case set.
 
 ## Design principle
 
