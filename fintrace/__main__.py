@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .evaluation import evaluate_suite
+from .evaluation import evaluate_suite, validate_benchmark_integrity
 from .pipeline import approve_report, run_case
 from .prompts import prompt_manifest
 from .providers import LiveLLMProvider, LocalDeterministicProvider
@@ -54,14 +54,16 @@ def main() -> int:
             return 0
         if args.command == "benchmark":
             result = evaluate_suite(args.suite)
+            validate_benchmark_integrity(result)
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
             print(json.dumps({
                 "output": str(args.output),
                 "cases": result["case_count"],
                 "findings": result["finding_count"],
-                "baseline_score": result["ablations"]["single_prompt"]["metrics"]["overall_score"],
-                "fintrace_score": result["ablations"]["full_fintrace"]["metrics"]["overall_score"],
+                "baseline_classification_accuracy": result["ablations"]["single_prompt"]["metrics"]["classification_accuracy"],
+                "fintrace_classification_accuracy": result["ablations"]["full_fintrace"]["metrics"]["classification_accuracy"],
+                "integrity_checks": result["integrity_checks"],
             }, indent=2))
             return 0
         if args.command == "approve":

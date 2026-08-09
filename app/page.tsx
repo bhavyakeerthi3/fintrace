@@ -9,7 +9,8 @@ type ResultStatus = "unresolved" | "explained" | "aligned";
 type Claim = {
   id: string; finding: string; label: string; quote: string; claimed: string; computed: string;
   formula: string; delta: string; source: string; status: ResultStatus; rationale: string;
-  passages: string[]; candidate: string; validation: string;
+  passages: string[]; candidate: string; validation: string; demoLabel: string; explanation: string;
+  baseline?: ResultStatus; expected?: ResultStatus;
 };
 
 const claims: Claim[] = [
@@ -21,6 +22,7 @@ const claims: Claim[] = [
     rationale: "No filing disclosure quantifies an acquisition, currency, divestiture, policy, or segment effect that reconciles the 10.27 percentage-point difference.",
     passages: ["Segment note p. 18: current revenue $124m; prior revenue $110m.", "MD&A p. 24: acquired operations are excluded from organic growth, with no quantified effect."],
     candidate: "No candidate passage numerically reconciles the difference.", validation: "No explanation quote submitted | remains UNRESOLVED",
+    demoLabel: "Case 1 | Numerical discrepancy", explanation: "None found",
   },
   {
     id: "claim-fcf", finding: "FT-002", label: "Adjusted free cash flow",
@@ -31,15 +33,17 @@ const claims: Claim[] = [
     passages: ["Cash-flow statement p. 9: operating cash flow $96m and capital expenditures $34m.", "Non-GAAP p. 31: adjusted free cash flow excludes $23m of cash restructuring payments."],
     candidate: "Adjusted free cash flow excludes 23 million dollars of cash restructuring payments; the measure is operating cash flow less capital expenditures plus those payments.",
     validation: "Exact quote located at Fictional 10-Q p. 31 | direct connection PASS",
+    demoLabel: "Case 2 | Filing-supported explanation", explanation: "$23m adjustment, exact quote validated",
   },
   {
-    id: "claim-margin", finding: "FT-003", label: "GAAP operating margin",
-    quote: "GAAP operating margin was approximately 13 percent.",
-    claimed: "13.00%", computed: "12.90%", formula: "$16m operating income / $124m revenue", delta: "0.10 pp",
-    source: "Income statement", status: "aligned",
-    rationale: "The recomputed value falls inside the declared 0.5 percentage-point tolerance, so no finding is escalated.",
-    passages: ["Income statement p. 7: operating income $16m; revenue $124m."],
-    candidate: "No explanation is required because the calculation is within tolerance.", validation: "Deterministic tolerance check PASS",
+    id: "claim-baseline", finding: "B09-F1", label: "Irrelevant disclosure trap",
+    quote: "Revenue was 130 million dollars.",
+    claimed: "$130m", computed: "$100m", formula: "$130m claim - $100m filed revenue", delta: "$30m",
+    source: "Revenue table + Debt note p. 44", status: "unresolved",
+    rationale: "The debt disclosure contains the same $30 million number, but it does not relate to revenue and cannot explain the discrepancy.",
+    passages: ["Revenue table: filed revenue $100m.", "Debt note p. 44: a $30m revolving credit facility remained undrawn."],
+    candidate: "A 30 million dollar revolving credit facility remained undrawn at quarter end.", validation: "Exact quote PASS | direct relationship FAIL | EXPLAINED -> UNRESOLVED",
+    demoLabel: "Case 3 | Baseline failure", explanation: "Debt disclosure rejected as irrelevant", baseline: "explained", expected: "unresolved",
   },
 ];
 
@@ -57,6 +61,10 @@ function ArrowIcon() {
   return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h13M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 }
 
+function formatPct(value: number) {
+  return value.toFixed(1);
+}
+
 export default function Home() {
   const [selected, setSelected] = useState(0);
   const [running, setRunning] = useState(false);
@@ -69,6 +77,8 @@ export default function Home() {
   const prompt = promptData[promptIndex];
   const baseline = evaluation.ablations.single_prompt;
   const fintrace = evaluation.ablations.full_fintrace;
+  const correctGain = fintrace.correct_classifications - baseline.correct_classifications;
+  const pointGain = (fintrace.classification_accuracy - baseline.classification_accuracy).toFixed(1);
 
   useEffect(() => {
     if (!running) return;
@@ -122,17 +132,18 @@ export default function Home() {
       </div></section>
 
       <section className="workspace shell" id="workspace">
-        <div className="section-kicker"><span>02</span><p>Judge demo | three outcome types</p></div>
-        <div className="workspace-head"><div><h2>Northstar Mobility</h2><p>Q2 FY2026 | controlled fictional demonstration</p></div><button className={`run-button ${running ? "is-running" : ""}`} onClick={runDemo} disabled={running}><span>{running ? "Tracing evidence..." : complete ? "Run Judge Demo again" : "Run Judge Demo"}</span><ArrowIcon /></button></div>
+        <div className="section-kicker"><span>02</span><p>Judge Demo mode | three decisive cases</p></div>
+        <div className="workspace-head"><div><span className="mode-badge">JUDGE DEMO</span><h2>Northstar Mobility</h2><p>Q2 FY2026 | controlled fictional demonstration</p></div><button className={`run-button ${running ? "is-running" : ""}`} onClick={runDemo} disabled={running}><span>{running ? "Tracing evidence..." : complete ? "Run Judge Demo again" : "Run Judge Demo"}</span><ArrowIcon /></button></div>
+        <div className="demo-case-strip">{claims.map((item, index) => <button key={item.id} className={selected === index ? "active" : ""} onClick={() => setSelected(index)}><span>0{index + 1}</span><strong>{item.demoLabel.split(" | ")[1]}</strong><small>{index === 0 ? "23.00% claimed vs 12.73% computed" : index === 1 ? "Disclosure + quote reconcile $23m" : "Single prompt fails; FinTrace succeeds"}</small></button>)}</div>
         <div className="progress-wrap" aria-live="polite"><div className="progress-label"><span>{running ? `Stage ${activeStage + 1} of ${stages.length} | ${stages[activeStage]?.[1]}` : complete ? "Three cases complete | awaiting human sign-off" : "Ready: unresolved + explained + within tolerance"}</span><span>{running ? `${Math.round(progress)}%` : complete ? "3 / 3" : "0 / 3"}</span></div><div className="progress"><i style={{ width: `${running || complete ? progress : 0}%` }} /></div></div>
 
         <div className="case-grid">
-          <aside className="claims-list" aria-label="Claims"><div className="panel-label">Transcript claims <span>3</span></div>{claims.map((item, index) => <button key={item.id} className={`claim-tab ${selected === index ? "active" : ""}`} onClick={() => { setSelected(index); setWhyOpen(false); }}><span>{item.finding}</span><strong>{item.label}</strong><small>Claimed {item.claimed}</small><StatusMark status={item.status} /></button>)}</aside>
-          <article className="evidence-panel"><div className="panel-label">Evidence trace <span>{claim.finding}</span></div><p className="quote-label">Management statement</p><blockquote>&quot;{claim.quote}&quot;</blockquote><div className="source-row"><span>Source</span><strong>Q2 earnings call | prepared remarks</strong></div><div className="connector"><span>checked against</span></div><div className="filing-card"><div><span>Filed source</span><strong>{claim.source}</strong></div><span className="verified">{claim.validation}</span></div><p className="rationale">{claim.rationale}</p></article>
-          <aside className="ledger"><div className="panel-label">Calculation ledger <span>deterministic</span></div><div className="ledger-values"><div><span>Claimed</span><strong>{claim.claimed}</strong></div><div><span>Computed</span><strong>{claim.computed}</strong></div></div><div className="formula"><span>Formula</span><code>{claim.formula}</code></div><div className="delta"><span>Absolute gap</span><strong>{claim.delta}</strong></div><div className="verdict"><span>Final result</span><StatusMark status={claim.status} /></div><button className="memo-button" onClick={() => setWhyOpen((value) => !value)}>{whyOpen ? "Hide Why panel" : "Why this result?"}<ArrowIcon /></button></aside>
+          <aside className="claims-list" aria-label="Claims"><div className="panel-label">Judge cases <span>3</span></div>{claims.map((item, index) => <button key={item.id} className={`claim-tab ${selected === index ? "active" : ""}`} onClick={() => { setSelected(index); setWhyOpen(false); }}><span>{item.finding}</span><strong>{item.label}</strong><small>Claimed {item.claimed}</small><StatusMark status={item.status} /></button>)}</aside>
+          <article className="evidence-panel"><div className="panel-label">Evidence trace <span>{claim.demoLabel}</span></div><p className="quote-label">Management statement</p><blockquote>&quot;{claim.quote}&quot;</blockquote><div className="source-row"><span>Source</span><strong>Q2 earnings call | prepared remarks</strong></div><div className="connector"><span>checked against</span></div><div className="filing-card"><div><span>Filed source</span><strong>{claim.source}</strong></div><span className="verified">{claim.validation}</span></div>{claim.baseline && <div className="baseline-compare"><div><span>Single Prompt</span><strong><StatusMark status={claim.baseline} /></strong><small>FAIL</small></div><div><span>FinTrace</span><strong><StatusMark status={claim.status} /></strong><small>PASS</small></div><div><span>Expected</span><strong><StatusMark status={claim.expected!} /></strong><small>ADJUDICATED</small></div></div>}<p className="rationale">{claim.rationale}</p></article>
+          <aside className="ledger"><div className="panel-label">DETERMINISTIC CODE <span>NOT AN LLM CALL</span></div><div className="ledger-values"><div><span>Claimed</span><strong>{claim.claimed}</strong></div><div><span>Computed</span><strong>{claim.computed}</strong></div></div><div className="formula"><span>Formula</span><code>{claim.formula}</code></div><div className="delta"><span>Difference</span><strong>{claim.delta}</strong></div><div className="filing-explanation"><span>Filing explanation</span><strong>{claim.explanation}</strong></div><div className="verdict"><span>Final result</span><StatusMark status={claim.status} /></div><button className="memo-button" onClick={() => setWhyOpen((value) => !value)}>{whyOpen ? "Hide Why panel" : "Why this result?"}<ArrowIcon /></button></aside>
         </div>
 
-        {whyOpen && <div className="why-panel" role="region" aria-label="Why this result"><div className="why-head"><span>WHY {claim.status.toUpperCase()}?</span><StatusMark status={claim.status} /></div>{claim.status === "explained" ? <><h3>Disclosure found</h3><blockquote>&quot;{claim.candidate}&quot;</blockquote><dl><div><dt>Connection</dt><dd>The disclosed $23m adjustment exactly bridges the $62m filed base to the $85m claim.</dd></div><div><dt>Quote validation</dt><dd>PASS | exact filing match and direct relationship</dd></div></dl></> : claim.status === "unresolved" ? <><div className="why-math"><div><span>Computed</span><strong>{claim.computed}</strong></div><div><span>Claimed</span><strong>{claim.claimed}</strong></div><div><span>Difference</span><strong>{claim.delta}</strong></div></div><h3>Filing explanations reviewed</h3><p>Currency | Acquisition | Divestiture | Accounting policy | Segment presentation</p><p><b>Result:</b> No filing disclosure directly reconciles the difference.</p></> : <><div className="why-math"><div><span>Computed</span><strong>{claim.computed}</strong></div><div><span>Claimed</span><strong>{claim.claimed}</strong></div><div><span>Difference</span><strong>{claim.delta}</strong></div></div><p><b>Result:</b> Difference is inside the declared 0.5 percentage-point tolerance. No escalation is created.</p></>}</div>}
+        {whyOpen && <div className="why-panel" role="region" aria-label="Why this result"><div className="why-head"><span>WHY {claim.status.toUpperCase()}?</span><StatusMark status={claim.status} /></div>{claim.status === "explained" ? <><h3>Disclosure found</h3><blockquote>&quot;{claim.candidate}&quot;</blockquote><dl><div><dt>Connection</dt><dd>The disclosed $23m adjustment exactly bridges the $62m filed base to the $85m claim.</dd></div><div><dt>Quote validation</dt><dd>PASS | exact filing match and direct relationship</dd></div></dl></> : claim.baseline ? <><div className="why-math"><div><span>Computed</span><strong>{claim.computed}</strong></div><div><span>Claimed</span><strong>{claim.claimed}</strong></div><div><span>Difference</span><strong>{claim.delta}</strong></div></div><h3>Why the plausible explanation fails</h3><blockquote>&quot;{claim.candidate}&quot;</blockquote><p>The quotation is present, but it describes an undrawn debt facility rather than revenue. Direct relationship: <b>FAIL</b>.</p><p><b>Result:</b> The baseline EXPLAINED result transitions to UNRESOLVED.</p></> : <><div className="why-math"><div><span>Computed</span><strong>{claim.computed}</strong></div><div><span>Claimed</span><strong>{claim.claimed}</strong></div><div><span>Difference</span><strong>{claim.delta}</strong></div></div><h3>Filing explanations reviewed</h3><p>Currency | Acquisition | Divestiture | Accounting policy | Segment presentation</p><p><b>Result:</b> No filing disclosure directly reconciles the difference.</p></>}</div>}
 
         <div className="chain"><div className="panel-label">Expandable evidence chain <span>{claim.finding}</span></div>{[
           ["01", "Management claim", claim.quote], ["02", "Filed values", claim.passages.join(" ")], ["03", "Python calculation", claim.formula],
@@ -146,25 +157,27 @@ export default function Home() {
 
       <section className="benchmark" id="evaluation"><div className="shell">
         <div className="section-kicker light"><span>03</span><p>Measured controlled benchmark</p></div>
-        <div className="evaluation-head"><div><h2>Same cases. Different workflow.</h2><p>{evaluation.case_count} fictional cases and {evaluation.finding_count} adjudicated findings, executed with the {evaluation.provider} adapter. Results apply only to this suite.</p></div><div className="headline-scores"><div><span>Single prompt</span><strong>{baseline.overall_score}%</strong><small>{baseline.correct_classifications}/{baseline.finding_count} correct</small></div><div><span>Full FinTrace</span><strong>{fintrace.overall_score}%</strong><small>{fintrace.correct_classifications}/{fintrace.finding_count} correct</small></div></div></div>
+        <div className="evaluation-head"><div><h2>Same evidence. Different controls.</h2><p>{evaluation.case_count} controlled fictional cases containing {evaluation.finding_count} independently evaluated findings, executed with the {evaluation.provider} adapter.</p><div className="lift-pills"><span>+{correctGain} correct findings</span><span>+{pointGain} percentage points</span></div></div><div className="headline-scores"><div><span>Single Prompt</span><strong>{formatPct(baseline.classification_accuracy)}%</strong><small>{baseline.correct_classifications} / {baseline.finding_count} correct</small></div><div><span>Full FinTrace</span><strong>{formatPct(fintrace.classification_accuracy)}%</strong><small>{fintrace.correct_classifications} / {fintrace.finding_count} correct</small></div></div></div>
         <div className="metric-grid">{[
-          ["Correct classifications", baseline.classification_accuracy, fintrace.classification_accuracy],
-          ["Unsupported explanations", baseline.unsupported_explanations, fintrace.unsupported_explanations],
-          ["Numerical accuracy", baseline.numerical_reconciliation_accuracy, fintrace.numerical_reconciliation_accuracy],
-          ["Quote validity", baseline.citation_quote_validity, fintrace.citation_quote_validity],
-          ["Unresolved accuracy", baseline.unresolved_item_accuracy, fintrace.unresolved_item_accuracy],
-        ].map(([label, base, full]) => <div className="metric-card" key={String(label)}><span>{label}</span><div><small>Single</small><strong>{base}{label === "Unsupported explanations" ? "" : "%"}</strong></div><div><small>FinTrace</small><strong>{full}{label === "Unsupported explanations" ? "" : "%"}</strong></div></div>)}</div>
-        <div className="ablation"><div className="panel-label">Prompt ablation | measured, not assumed <span>suite v{evaluation.suite_version}</span></div><table><thead><tr><th>Workflow</th><th>Correct</th><th>Unsupported</th><th>Numeric accuracy</th><th>Overall</th></tr></thead><tbody>{Object.entries(evaluation.ablations).map(([name, metrics]) => <tr key={name}><td>{name.replaceAll("_", " ")}</td><td>{metrics.correct_classifications}/{metrics.finding_count}</td><td>{metrics.unsupported_explanations}</td><td>{metrics.numerical_reconciliation_accuracy}%</td><td>{metrics.overall_score}%</td></tr>)}</tbody></table></div>
-        <p className="benchmark-note">The score is computed from classification accuracy, false-positive rate, unsupported-explanation rate, numerical accuracy, citation validity, and unresolved-item accuracy. This controlled suite demonstrates component behavior; it is not a production accuracy claim.</p>
+          ["Classification accuracy", baseline.classification_accuracy, fintrace.classification_accuracy, "%"],
+          ["Unsupported-explanation count", baseline.unsupported_explanations, fintrace.unsupported_explanations, ""],
+          ["Numeric reconciliation accuracy", baseline.numerical_reconciliation_accuracy, fintrace.numerical_reconciliation_accuracy, "%"],
+          ["False-positive count", baseline.false_positives, fintrace.false_positives, ""],
+        ].map(([label, base, full, suffix]) => <div className="metric-card" key={String(label)}><span>{label}</span><div><small>Single</small><strong>{suffix === "%" ? `${formatPct(Number(base))}%` : base}</strong></div><div><small>FinTrace</small><strong>{suffix === "%" ? `${formatPct(Number(full))}%` : full}</strong></div></div>)}</div>
+        <div className="ablation"><div className="panel-label">Prompt ablation | measured, not assumed <span>suite v{evaluation.suite_version}</span></div><table><thead><tr><th>Workflow</th><th>Correct</th><th>Classification accuracy</th><th>Unsupported explanations</th><th>Numeric reconciliation accuracy</th><th>False positives</th></tr></thead><tbody>{Object.entries(evaluation.ablations).map(([name, metrics]) => <tr key={name}><td>{name.replaceAll("_", " ")}</td><td>{metrics.correct_classifications}/{metrics.finding_count}</td><td>{formatPct(metrics.classification_accuracy)}%</td><td>{metrics.unsupported_explanations}</td><td>{metrics.correct_numeric_checks}/{metrics.numeric_checks} ({formatPct(metrics.numerical_reconciliation_accuracy)}%)</td><td>{metrics.false_positives}</td></tr>)}</tbody></table></div>
+        <p className="benchmark-note"><b>Reproducible formula:</b> classification accuracy = correct classifications / {evaluation.finding_count} findings x 100. Integrity checks verified {evaluation.integrity_checks.percentages_checked} percentage calculations before this artifact was generated. Results are limited to this controlled fictional benchmark and are not a claim of general model performance.</p>
       </div></section>
 
+      <section className="single-prompt"><div className="shell"><div className="section-kicker light"><span>04</span><p>Why not a single prompt?</p></div><div className="single-prompt-grid"><article><span>SINGLE PROMPT</span><h2>Can identify a plausible explanation.</h2><p>In this controlled benchmark, it sometimes accepts a matching number even when the disclosure is generic, irrelevant, or cannot be quoted.</p></article><article><span>FINTRACE</span><h2>Adds explicit gates.</h2><ul><li>Requires deterministic calculation</li><li>Retrieves filing evidence</li><li>Requires direct relevance</li><li>Validates the quotation</li><li>Preserves unresolved cases</li><li>Requires human review</li></ul></article></div><p className="benchmark-note">This comparison describes the measured behavior of this controlled fictional benchmark. It does not claim that every multi-step workflow is always better.</p></div></section>
+
       <section className="inspector shell" id="prompts">
-        <div className="section-kicker"><span>04</span><p>Prompt Inspector</p></div>
+        <div className="section-kicker"><span>05</span><p>Prompt Inspector</p></div>
         <div className="section-heading"><h2>Inspect every model contract.</h2><p>Judges can see the version, instruction, input contract, expected schema, and sample output. Secrets never enter this interface.</p></div>
-        <div className="inspector-grid"><aside>{promptData.map((item, index) => <button className={promptIndex === index ? "active" : ""} onClick={() => setPromptIndex(index)} key={item.id}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item.stage.replaceAll("_", " ")}</strong><small>v{item.version}</small></button>)}</aside><article><div className="prompt-meta"><div><span>Stage</span><strong>{prompt.stage.replaceAll("_", " ")}</strong></div><div><span>Model</span><strong>{prompt.stage === "aggregator" ? "deterministic demo" : "provider selected"}</strong></div><div><span>Prompt version</span><strong>{prompt.version}</strong></div></div><h3>System instruction</h3><pre>{prompt.system_instruction}</pre><div className="prompt-columns"><div><h3>Input</h3><pre>{JSON.stringify(prompt.input_contract, null, 2)}</pre></div><div><h3>Expected JSON schema</h3><pre>{JSON.stringify(prompt.expected_json_schema, null, 2)}</pre></div></div><h3>Sample output</h3><pre>{JSON.stringify(prompt.sample_output, null, 2)}</pre></article></div>
+        <div className="code-boundary"><div><span>LLM CALLS</span><strong>Specialists -&gt; aggregator -&gt; second pass</strong><small>Versioned prompts and schema-validated structured outputs</small></div><b>-&gt;</b><div className="code-only"><span>DETERMINISTIC CODE</span><strong>Python calculation + quote validation</strong><small>NOT AN LLM CALL</small></div></div>
+        <div className="inspector-grid"><aside>{promptData.map((item, index) => <button className={promptIndex === index ? "active" : ""} onClick={() => setPromptIndex(index)} key={item.id}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item.stage.replaceAll("_", " ")}</strong><small>v{item.version}</small></button>)}</aside><article><div className="call-label">{prompt.call_type}</div><div className="prompt-meta"><div><span>Stage</span><strong>{prompt.stage.replaceAll("_", " ")}</strong></div><div><span>Model</span><strong>{prompt.model}</strong></div><div><span>Temperature</span><strong>{prompt.temperature.toFixed(1)}</strong></div><div><span>Prompt version</span><strong>{prompt.version}</strong></div></div><h3>Purpose</h3><p className="prompt-purpose">{prompt.purpose}</p><h3>System instruction</h3><pre>{prompt.system_instruction}</pre><div className="prompt-columns"><div><h3>Input</h3><pre>{JSON.stringify(prompt.input_contract, null, 2)}</pre></div><div><h3>Structured output</h3><pre>{JSON.stringify(prompt.sample_output, null, 2)}</pre></div></div><h3>Expected JSON schema</h3><pre>{JSON.stringify(prompt.expected_json_schema, null, 2)}</pre><div className="validation-result"><span>VALIDATION RESULT</span><strong>{prompt.validation_result}</strong></div></article></div>
       </section>
 
-      <section className="refusals"><div className="shell"><div className="section-kicker light"><span>05</span><p>Where FinTrace refuses to guess</p></div><h2>Unresolved is a feature.</h2><div className="refusal-grid">{[
+      <section className="refusals"><div className="shell"><div className="section-kicker light"><span>06</span><p>Where FinTrace refuses to guess</p></div><h2>Unresolved is a feature.</h2><div className="refusal-grid">{[
         ["Insufficient filing data", "The filing names an effect but does not quantify it."],
         ["Plausible but unsupported", "The explanation sounds reasonable but is absent from the filing."],
         ["Quote cannot be validated", "A proposed quotation is not found in the supplied corpus."],

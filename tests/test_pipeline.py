@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fintrace.evaluation import evaluate_suite, load_benchmark
+from fintrace.evaluation import evaluate_suite, load_benchmark, validate_benchmark_integrity
 from fintrace.pipeline import approve_report, run_case
 from fintrace.prompts import PROMPT_VERSION, SECOND_PASS_REVIEWER, SPECIALISTS, PromptValidationError, prompt_manifest, validate_prompt_output
 from fintrace.providers import LocalDeterministicProvider
@@ -193,9 +193,35 @@ class FinTraceTests(unittest.TestCase):
         baseline = result["ablations"]["single_prompt"]["metrics"]
         fintrace = result["ablations"]["full_fintrace"]["metrics"]
         self.assertEqual(baseline["correct_classifications"], 8)
+        self.assertEqual(baseline["incorrect_classifications"], 5)
+        self.assertEqual(baseline["classification_accuracy"], 61.5)
         self.assertEqual(fintrace["correct_classifications"], 13)
+        self.assertEqual(fintrace["classification_accuracy"], 100.0)
         self.assertGreater(baseline["unsupported_explanations"], fintrace["unsupported_explanations"])
         self.assertEqual(fintrace["citation_quote_validity"], 100.0)
+
+    def test_benchmark_integrity_checks_all_percentage_bases(self) -> None:
+        result = evaluate_suite(BENCHMARK)
+        checks = validate_benchmark_integrity(result)
+        self.assertEqual(checks, {
+            "status": "passed",
+            "case_count": 12,
+            "finding_count": 13,
+            "modes_checked": 4,
+            "percentages_checked": 16,
+        })
+        metrics = result["ablations"]["specialists_plus_calculation"]["metrics"]
+        self.assertEqual(metrics["correct_classifications"], 9)
+        self.assertEqual(metrics["classification_accuracy"], 69.2)
+        self.assertEqual(metrics["correct_numeric_checks"], 13)
+        self.assertEqual(metrics["numeric_checks"], 13)
+
+    def test_benchmark_integrity_rejects_tampered_percentage(self) -> None:
+        result = evaluate_suite(BENCHMARK)
+        metrics = result["ablations"]["single_prompt"]["metrics"]
+        metrics["classification_accuracy"] = 55.6
+        with self.assertRaisesRegex(ValueError, "does not match"):
+            validate_benchmark_integrity(result)
 
 
 if __name__ == "__main__":

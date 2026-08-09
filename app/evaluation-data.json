@@ -3,62 +3,169 @@
   "provider": "local-deterministic",
   "case_count": 12,
   "finding_count": 13,
+  "integrity_checks": {
+    "status": "passed",
+    "case_count": 12,
+    "finding_count": 13,
+    "modes_checked": 4,
+    "percentages_checked": 16
+  },
   "ablations": {
     "single_prompt": {
       "finding_count": 13,
       "correct_classifications": 8,
+      "incorrect_classifications": 5,
       "classification_accuracy": 61.5,
       "false_positives": 1,
-      "false_positive_rate": 7.7,
       "unsupported_explanations": 4,
-      "unsupported_explanation_rate": 30.8,
+      "numeric_checks": 13,
+      "correct_numeric_checks": 0,
       "numerical_reconciliation_accuracy": 0.0,
+      "explained_outputs": 11,
       "valid_citations": 10,
       "citation_quote_validity": 90.9,
+      "expected_unresolved_items": 5,
+      "correct_unresolved_items": 1,
       "unresolved_item_accuracy": 20.0,
-      "overall_score": 55.6
+      "percentage_checks": {
+        "classification_accuracy": {
+          "numerator": 8,
+          "denominator": 13,
+          "reported_percentage": 61.5
+        },
+        "numerical_reconciliation_accuracy": {
+          "numerator": 0,
+          "denominator": 13,
+          "reported_percentage": 0.0
+        },
+        "citation_quote_validity": {
+          "numerator": 10,
+          "denominator": 11,
+          "reported_percentage": 90.9
+        },
+        "unresolved_item_accuracy": {
+          "numerator": 1,
+          "denominator": 5,
+          "reported_percentage": 20.0
+        }
+      }
     },
     "four_specialists": {
       "finding_count": 13,
       "correct_classifications": 8,
+      "incorrect_classifications": 5,
       "classification_accuracy": 61.5,
       "false_positives": 1,
-      "false_positive_rate": 7.7,
       "unsupported_explanations": 4,
-      "unsupported_explanation_rate": 30.8,
+      "numeric_checks": 13,
+      "correct_numeric_checks": 0,
       "numerical_reconciliation_accuracy": 0.0,
+      "explained_outputs": 11,
       "valid_citations": 10,
       "citation_quote_validity": 90.9,
+      "expected_unresolved_items": 5,
+      "correct_unresolved_items": 1,
       "unresolved_item_accuracy": 20.0,
-      "overall_score": 55.6
+      "percentage_checks": {
+        "classification_accuracy": {
+          "numerator": 8,
+          "denominator": 13,
+          "reported_percentage": 61.5
+        },
+        "numerical_reconciliation_accuracy": {
+          "numerator": 0,
+          "denominator": 13,
+          "reported_percentage": 0.0
+        },
+        "citation_quote_validity": {
+          "numerator": 10,
+          "denominator": 11,
+          "reported_percentage": 90.9
+        },
+        "unresolved_item_accuracy": {
+          "numerator": 1,
+          "denominator": 5,
+          "reported_percentage": 20.0
+        }
+      }
     },
     "specialists_plus_calculation": {
       "finding_count": 13,
       "correct_classifications": 9,
+      "incorrect_classifications": 4,
       "classification_accuracy": 69.2,
       "false_positives": 0,
-      "false_positive_rate": 0.0,
       "unsupported_explanations": 4,
-      "unsupported_explanation_rate": 30.8,
+      "numeric_checks": 13,
+      "correct_numeric_checks": 13,
       "numerical_reconciliation_accuracy": 100.0,
+      "explained_outputs": 11,
       "valid_citations": 10,
       "citation_quote_validity": 90.9,
+      "expected_unresolved_items": 5,
+      "correct_unresolved_items": 1,
       "unresolved_item_accuracy": 20.0,
-      "overall_score": 74.9
+      "percentage_checks": {
+        "classification_accuracy": {
+          "numerator": 9,
+          "denominator": 13,
+          "reported_percentage": 69.2
+        },
+        "numerical_reconciliation_accuracy": {
+          "numerator": 13,
+          "denominator": 13,
+          "reported_percentage": 100.0
+        },
+        "citation_quote_validity": {
+          "numerator": 10,
+          "denominator": 11,
+          "reported_percentage": 90.9
+        },
+        "unresolved_item_accuracy": {
+          "numerator": 1,
+          "denominator": 5,
+          "reported_percentage": 20.0
+        }
+      }
     },
     "full_fintrace": {
       "finding_count": 13,
       "correct_classifications": 13,
+      "incorrect_classifications": 0,
       "classification_accuracy": 100.0,
       "false_positives": 0,
-      "false_positive_rate": 0.0,
       "unsupported_explanations": 0,
-      "unsupported_explanation_rate": 0.0,
+      "numeric_checks": 13,
+      "correct_numeric_checks": 13,
       "numerical_reconciliation_accuracy": 100.0,
+      "explained_outputs": 7,
       "valid_citations": 7,
       "citation_quote_validity": 100.0,
+      "expected_unresolved_items": 5,
+      "correct_unresolved_items": 5,
       "unresolved_item_accuracy": 100.0,
-      "overall_score": 100.0
+      "percentage_checks": {
+        "classification_accuracy": {
+          "numerator": 13,
+          "denominator": 13,
+          "reported_percentage": 100.0
+        },
+        "numerical_reconciliation_accuracy": {
+          "numerator": 13,
+          "denominator": 13,
+          "reported_percentage": 100.0
+        },
+        "citation_quote_validity": {
+          "numerator": 7,
+          "denominator": 7,
+          "reported_percentage": 100.0
+        },
+        "unresolved_item_accuracy": {
+          "numerator": 5,
+          "denominator": 5,
+          "reported_percentage": 100.0
+        }
+      }
     }
   },
   "comparisons": [
@@ -92,11 +199,13 @@
       "expected_result": [
         {
           "finding_id": "B01-F1",
-          "classification": "unresolved"
+          "classification": "unresolved",
+          "computed_value": 12.73
         }
       ],
       "baseline_correct": true,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": false,
       "baseline_unsupported_explanation": false,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,
@@ -132,11 +241,13 @@
       "expected_result": [
         {
           "finding_id": "B02-F1",
-          "classification": "explained"
+          "classification": "explained",
+          "computed_value": 100.0
         }
       ],
       "baseline_correct": true,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": false,
       "baseline_unsupported_explanation": false,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,
@@ -172,11 +283,13 @@
       "expected_result": [
         {
           "finding_id": "B03-F1",
-          "classification": "explained"
+          "classification": "explained",
+          "computed_value": 100.0
         }
       ],
       "baseline_correct": true,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": false,
       "baseline_unsupported_explanation": false,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,
@@ -212,11 +325,13 @@
       "expected_result": [
         {
           "finding_id": "B04-F1",
-          "classification": "explained"
+          "classification": "explained",
+          "computed_value": 100.0
         }
       ],
       "baseline_correct": true,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": false,
       "baseline_unsupported_explanation": false,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,
@@ -252,11 +367,13 @@
       "expected_result": [
         {
           "finding_id": "B05-F1",
-          "classification": "explained"
+          "classification": "explained",
+          "computed_value": 60.0
         }
       ],
       "baseline_correct": true,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": false,
       "baseline_unsupported_explanation": false,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,
@@ -292,11 +409,13 @@
       "expected_result": [
         {
           "finding_id": "B06-F1",
-          "classification": "explained"
+          "classification": "explained",
+          "computed_value": 50.0
         }
       ],
       "baseline_correct": true,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": false,
       "baseline_unsupported_explanation": false,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,
@@ -332,11 +451,13 @@
       "expected_result": [
         {
           "finding_id": "B07-F1",
-          "classification": "explained"
+          "classification": "explained",
+          "computed_value": 62.0
         }
       ],
       "baseline_correct": true,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": false,
       "baseline_unsupported_explanation": false,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,
@@ -372,11 +493,13 @@
       "expected_result": [
         {
           "finding_id": "B08-F1",
-          "classification": "aligned"
+          "classification": "aligned",
+          "computed_value": 12.9
         }
       ],
       "baseline_correct": false,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": true,
       "baseline_unsupported_explanation": false,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": true,
@@ -412,11 +535,13 @@
       "expected_result": [
         {
           "finding_id": "B09-F1",
-          "classification": "unresolved"
+          "classification": "unresolved",
+          "computed_value": 100.0
         }
       ],
       "baseline_correct": false,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": true,
       "baseline_unsupported_explanation": true,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,
@@ -452,11 +577,13 @@
       "expected_result": [
         {
           "finding_id": "B10-F1",
-          "classification": "unresolved"
+          "classification": "unresolved",
+          "computed_value": 100.0
         }
       ],
       "baseline_correct": false,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": true,
       "baseline_unsupported_explanation": true,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,
@@ -492,11 +619,13 @@
       "expected_result": [
         {
           "finding_id": "B11-F1",
-          "classification": "unresolved"
+          "classification": "unresolved",
+          "computed_value": 100.0
         }
       ],
       "baseline_correct": false,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": true,
       "baseline_unsupported_explanation": true,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,
@@ -547,15 +676,18 @@
       "expected_result": [
         {
           "finding_id": "B12-F1",
-          "classification": "explained"
+          "classification": "explained",
+          "computed_value": 40.0
         },
         {
           "finding_id": "B12-F2",
-          "classification": "unresolved"
+          "classification": "unresolved",
+          "computed_value": 40.0
         }
       ],
       "baseline_correct": false,
       "fintrace_correct": true,
+      "baseline_fail_fintrace_pass": true,
       "baseline_unsupported_explanation": true,
       "fintrace_unsupported_explanation": false,
       "baseline_false_positive": false,

@@ -64,7 +64,11 @@
     ],
     "sample_output": {
       "findings": []
-    }
+    },
+    "call_type": "LLM CALL",
+    "model": "provider selected / local deterministic adapter",
+    "temperature": 0.0,
+    "validation_result": "PASS - structured output is checked against the versioned JSON schema"
   },
   {
     "stage": "cash_flow",
@@ -131,7 +135,11 @@
     ],
     "sample_output": {
       "findings": []
-    }
+    },
+    "call_type": "LLM CALL",
+    "model": "provider selected / local deterministic adapter",
+    "temperature": 0.0,
+    "validation_result": "PASS - structured output is checked against the versioned JSON schema"
   },
   {
     "stage": "related_party",
@@ -198,7 +206,11 @@
     ],
     "sample_output": {
       "findings": []
-    }
+    },
+    "call_type": "LLM CALL",
+    "model": "provider selected / local deterministic adapter",
+    "temperature": 0.0,
+    "validation_result": "PASS - structured output is checked against the versioned JSON schema"
   },
   {
     "stage": "language",
@@ -269,7 +281,11 @@
     ],
     "sample_output": {
       "findings": []
-    }
+    },
+    "call_type": "LLM CALL",
+    "model": "provider selected / local deterministic adapter",
+    "temperature": 0.0,
+    "validation_result": "PASS - structured output is checked against the versioned JSON schema"
   },
   {
     "stage": "aggregator",
@@ -338,7 +354,11 @@
     ],
     "sample_output": {
       "findings": []
-    }
+    },
+    "call_type": "LLM CALL",
+    "model": "provider selected / local deterministic adapter",
+    "temperature": 0.0,
+    "validation_result": "PASS - structured output is checked against the versioned JSON schema"
   },
   {
     "stage": "second_pass",
@@ -411,6 +431,10 @@
           "reasoning": "No filing disclosure directly reconciles the numerical difference."
         }
       ]
-    }
+    },
+    "call_type": "LLM CALL",
+    "model": "provider selected / local deterministic adapter",
+    "temperature": 0.0,
+    "validation_result": "PASS - structured output is checked against the versioned JSON schema"
   }
 ]

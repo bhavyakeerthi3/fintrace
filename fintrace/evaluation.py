@@ -10,6 +10,8 @@ from typing import Any
 
 MODES = ("single_prompt", "four_specialists", "specialists_plus_calculation", "full_fintrace")
 BASELINE_PROMPT = "Review the transcript and filing. Identify any financial inconsistencies and explain them. Return your findings."
+PERCENTAGE_PRECISION = 1
+PERCENTAGE_TOLERANCE = 0.05
 
 
 def load_benchmark(path: Path) -> dict[str, Any]:
@@ -73,40 +75,117 @@ def classify_finding(finding: Mapping[str, Any], mode: str) -> dict[str, Any]:
     }
 
 
+def _percentage(numerator: int, denominator: int) -> float:
+    return round((numerator / denominator) * 100, PERCENTAGE_PRECISION) if denominator else 100.0
+
+
 def _score(outputs: list[dict[str, Any]], expected: dict[str, Mapping[str, Any]]) -> dict[str, Any]:
     total = len(outputs)
     correct = sum(item["classification"] == expected[item["finding_id"]]["expected_result"] for item in outputs)
     unsupported = sum(item["classification"] == "explained" and expected[item["finding_id"]]["expected_result"] != "explained" for item in outputs)
     false_positive = sum(expected[item["finding_id"]]["expected_result"] == "aligned" and item["classification"] != "aligned" for item in outputs)
-    numeric = sum(item["computed_value"] == float(expected[item["finding_id"]]["computed_value"]) for item in outputs)
+    numeric_outputs = [item for item in outputs if expected[item["finding_id"]].get("computed_value") is not None]
+    numeric = sum(item["computed_value"] == float(expected[item["finding_id"]]["computed_value"]) for item in numeric_outputs)
     explained = [item for item in outputs if item["classification"] == "explained"]
     valid_citations = sum(item["citation_valid"] is True for item in explained)
     expected_unresolved = [item for item in outputs if expected[item["finding_id"]]["expected_result"] == "unresolved"]
     unresolved_correct = sum(item["classification"] == "unresolved" for item in expected_unresolved)
-    pct = lambda value, denominator: round((value / denominator) * 100, 1) if denominator else 100.0
     metrics = {
         "finding_count": total,
         "correct_classifications": correct,
-        "classification_accuracy": pct(correct, total),
+        "incorrect_classifications": total - correct,
+        "classification_accuracy": _percentage(correct, total),
         "false_positives": false_positive,
-        "false_positive_rate": pct(false_positive, total),
         "unsupported_explanations": unsupported,
-        "unsupported_explanation_rate": pct(unsupported, total),
-        "numerical_reconciliation_accuracy": pct(numeric, total),
+        "numeric_checks": len(numeric_outputs),
+        "correct_numeric_checks": numeric,
+        "numerical_reconciliation_accuracy": _percentage(numeric, len(numeric_outputs)),
+        "explained_outputs": len(explained),
         "valid_citations": valid_citations,
-        "citation_quote_validity": pct(valid_citations, len(explained)),
-        "unresolved_item_accuracy": pct(unresolved_correct, len(expected_unresolved)),
+        "citation_quote_validity": _percentage(valid_citations, len(explained)),
+        "expected_unresolved_items": len(expected_unresolved),
+        "correct_unresolved_items": unresolved_correct,
+        "unresolved_item_accuracy": _percentage(unresolved_correct, len(expected_unresolved)),
     }
-    components = [
-        metrics["classification_accuracy"],
-        100 - metrics["false_positive_rate"],
-        100 - metrics["unsupported_explanation_rate"],
-        metrics["numerical_reconciliation_accuracy"],
-        metrics["citation_quote_validity"],
-        metrics["unresolved_item_accuracy"],
-    ]
-    metrics["overall_score"] = round(sum(components) / len(components), 1)
+    metrics["percentage_checks"] = {
+        "classification_accuracy": {"numerator": correct, "denominator": total, "reported_percentage": metrics["classification_accuracy"]},
+        "numerical_reconciliation_accuracy": {"numerator": numeric, "denominator": len(numeric_outputs), "reported_percentage": metrics["numerical_reconciliation_accuracy"]},
+        "citation_quote_validity": {"numerator": valid_citations, "denominator": len(explained), "reported_percentage": metrics["citation_quote_validity"]},
+        "unresolved_item_accuracy": {"numerator": unresolved_correct, "denominator": len(expected_unresolved), "reported_percentage": metrics["unresolved_item_accuracy"]},
+    }
     return metrics
+
+
+def validate_benchmark_integrity(result: Mapping[str, Any]) -> dict[str, Any]:
+    """Fail closed when benchmark counts or any reported percentage drift."""
+    comparisons = result.get("comparisons")
+    ablations = result.get("ablations")
+    if not isinstance(comparisons, list) or not isinstance(ablations, Mapping):
+        raise ValueError("Benchmark output is missing comparisons or ablations")
+    case_count = len(comparisons)
+    expected_by_id = {
+        item["finding_id"]: item
+        for case in comparisons
+        for item in case["expected_result"]
+    }
+    finding_count = len(expected_by_id)
+    if result.get("case_count") != case_count or result.get("finding_count") != finding_count:
+        raise ValueError("Benchmark case or finding count is inconsistent")
+
+    checked_percentages = 0
+    for mode in MODES:
+        data = ablations.get(mode)
+        if not isinstance(data, Mapping):
+            raise ValueError(f"Benchmark mode is missing: {mode}")
+        outputs = data.get("outputs")
+        metrics = data.get("metrics")
+        if not isinstance(outputs, list) or not isinstance(metrics, Mapping) or len(outputs) != finding_count:
+            raise ValueError(f"Benchmark output count is inconsistent for {mode}")
+        correct = sum(item["classification"] == expected_by_id[item["finding_id"]]["classification"] for item in outputs)
+        incorrect = finding_count - correct
+        unsupported = sum(item["classification"] == "explained" and expected_by_id[item["finding_id"]]["classification"] != "explained" for item in outputs)
+        false_positives = sum(expected_by_id[item["finding_id"]]["classification"] == "aligned" and item["classification"] != "aligned" for item in outputs)
+        numeric_outputs = [item for item in outputs if expected_by_id[item["finding_id"]].get("computed_value") is not None]
+        correct_numeric = sum(item["computed_value"] == expected_by_id[item["finding_id"]]["computed_value"] for item in numeric_outputs)
+        explained_outputs = [item for item in outputs if item["classification"] == "explained"]
+        valid_citations = sum(item["citation_valid"] is True for item in explained_outputs)
+        expected_unresolved = [item for item in outputs if expected_by_id[item["finding_id"]]["classification"] == "unresolved"]
+        correct_unresolved = sum(item["classification"] == "unresolved" for item in expected_unresolved)
+        expected_counts = {
+            "finding_count": finding_count,
+            "correct_classifications": correct,
+            "incorrect_classifications": incorrect,
+            "unsupported_explanations": unsupported,
+            "false_positives": false_positives,
+            "numeric_checks": len(numeric_outputs),
+            "correct_numeric_checks": correct_numeric,
+            "explained_outputs": len(explained_outputs),
+            "valid_citations": valid_citations,
+            "expected_unresolved_items": len(expected_unresolved),
+            "correct_unresolved_items": correct_unresolved,
+        }
+        for key, expected_value in expected_counts.items():
+            if metrics.get(key) != expected_value:
+                raise ValueError(f"Benchmark metric {mode}.{key} is inconsistent")
+        for name, check in metrics.get("percentage_checks", {}).items():
+            numerator = check.get("numerator")
+            denominator = check.get("denominator")
+            reported = check.get("reported_percentage")
+            if not isinstance(numerator, int) or not isinstance(denominator, int) or not isinstance(reported, (int, float)):
+                raise ValueError(f"Benchmark percentage {mode}.{name} has an invalid basis")
+            expected_percentage = _percentage(numerator, denominator)
+            if abs(float(reported) - expected_percentage) > PERCENTAGE_TOLERANCE:
+                raise ValueError(f"Benchmark percentage {mode}.{name} is inconsistent")
+            if metrics.get(name) != reported:
+                raise ValueError(f"Benchmark percentage {mode}.{name} does not match its reported metric")
+            checked_percentages += 1
+    return {
+        "status": "passed",
+        "case_count": case_count,
+        "finding_count": finding_count,
+        "modes_checked": len(MODES),
+        "percentages_checked": checked_percentages,
+    }
 
 
 def evaluate_suite(path: Path) -> dict[str, Any]:
@@ -119,7 +198,9 @@ def evaluate_suite(path: Path) -> dict[str, Any]:
         ids = {item["finding_id"] for item in case["findings"]}
         baseline = [item for item in mode_outputs["single_prompt"] if item["finding_id"] in ids]
         fintrace = [item for item in mode_outputs["full_fintrace"] if item["finding_id"] in ids]
-        expected_results = [{"finding_id": item["finding_id"], "classification": item["expected_result"]} for item in case["findings"]]
+        expected_results = [{"finding_id": item["finding_id"], "classification": item["expected_result"], "computed_value": float(item["computed_value"])} for item in case["findings"]]
+        baseline_correct = all(item["classification"] == expected[item["finding_id"]]["expected_result"] for item in baseline)
+        fintrace_correct = all(item["classification"] == expected[item["finding_id"]]["expected_result"] for item in fintrace)
         comparisons.append({
             "case_id": case["case_id"],
             "title": case["title"],
@@ -127,14 +208,15 @@ def evaluate_suite(path: Path) -> dict[str, Any]:
             "baseline_output": baseline,
             "fintrace_output": fintrace,
             "expected_result": expected_results,
-            "baseline_correct": all(item["classification"] == expected[item["finding_id"]]["expected_result"] for item in baseline),
-            "fintrace_correct": all(item["classification"] == expected[item["finding_id"]]["expected_result"] for item in fintrace),
+            "baseline_correct": baseline_correct,
+            "fintrace_correct": fintrace_correct,
+            "baseline_fail_fintrace_pass": not baseline_correct and fintrace_correct,
             "baseline_unsupported_explanation": any(item["classification"] == "explained" and expected[item["finding_id"]]["expected_result"] != "explained" for item in baseline),
             "fintrace_unsupported_explanation": any(item["classification"] == "explained" and expected[item["finding_id"]]["expected_result"] != "explained" for item in fintrace),
             "baseline_false_positive": any(expected[item["finding_id"]]["expected_result"] == "aligned" and item["classification"] != "aligned" for item in baseline),
             "fintrace_false_positive": any(expected[item["finding_id"]]["expected_result"] == "aligned" and item["classification"] != "aligned" for item in fintrace),
         })
-    return {
+    result = {
         "suite_version": suite["suite_version"],
         "provider": "local-deterministic",
         "baseline_prompt": BASELINE_PROMPT,
@@ -143,3 +225,5 @@ def evaluate_suite(path: Path) -> dict[str, Any]:
         "comparisons": comparisons,
         "ablations": {mode: {"metrics": _score(mode_outputs[mode], expected), "outputs": mode_outputs[mode]} for mode in MODES},
     }
+    result["integrity_checks"] = validate_benchmark_integrity(result)
+    return result

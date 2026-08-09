@@ -24,6 +24,8 @@ FinTrace is an evidence-first financial review pipeline built for the Reverie Ha
 
 The included case uses a clearly labeled fictional company. FinTrace describes observable inconsistencies and does not infer intent or accuse a company or person of wrongdoing.
 
+The benchmark uses fictional companies and controlled disclosures.
+
 ## What happens inside
 
 ```mermaid
@@ -144,7 +146,7 @@ The Python engine is the authoritative implementation. The public Next.js page i
 
 `ModelProvider` has two implementations: `LocalDeterministicProvider` for reproducible public runs and `LiveLLMProvider` for an OpenAI-compatible endpoint. Live execution is configured with server-side `FINTRACE_LLM_API_KEY` and optional `FINTRACE_LLM_ENDPOINT` values. Secrets are never included in reports or the Prompt Inspector.
 
-## Demo outcomes
+## Judge Demo outcomes
 
 The fixture demonstrates three distinct outcomes:
 
@@ -152,9 +154,28 @@ The fixture demonstrates three distinct outcomes:
 | --- | ---: | ---: | --- |
 | Organic revenue growth | 23.0% | 12.73% | Unresolved after filing review |
 | Adjusted free cash flow | $85m | $62m before adjustment | Explained by a validated $23m filing adjustment |
-| GAAP operating margin | 13.0% | 12.90% | Aligned within tolerance |
+| Irrelevant disclosure trap (B09) | $130m | $100m | Single Prompt: explained; FinTrace and expected: unresolved |
 
-Only the first two become candidate findings because the margin claim already agrees with the filing-derived result.
+The third case makes a baseline failure visible: an undrawn $30 million credit facility contains a matching number but does not relate to revenue, so FinTrace rejects it as an explanation.
+
+## Why not a single prompt?
+
+The controlled benchmark demonstrates a specific difference in workflow behavior:
+
+```text
+Single prompt
+    -> can identify a plausible explanation
+
+FinTrace
+    -> requires deterministic calculation
+    -> retrieves filing evidence
+    -> requires direct relevance
+    -> validates the quotation
+    -> preserves unresolved cases
+    -> requires human review
+```
+
+This does not claim that a multi-step workflow is always better. It reports only what happens on the controlled fictional benchmark.
 
 ## Report contents
 
@@ -271,17 +292,29 @@ Open `http://localhost:3000`.
 
 ```bash
 python -m fintrace demo
+python -m fintrace benchmark
 python -m unittest discover -s tests -v
 npm run lint
 npm run build
 npm audit --omit=dev
 ```
 
-The current release passes 18 Python tests, ESLint, the Next.js production build, JSON Schema validation, and the production dependency audit.
+The release gate includes Python tests, ESLint, the Next.js production build, JSON Schema validation, benchmark-integrity checks, and the production dependency audit.
 
 ## Controlled benchmark and samples
 
-The repository includes 12 fictional benchmark cases covering unexplained gaps, currency, acquisitions, divestitures, segment reclassification, accounting-policy changes, one-time adjustments, tolerance, irrelevant and generic disclosures, invalid quotations, and overlapping evidence.
+The repository includes 12 controlled fictional cases containing 13 independently evaluated findings. They cover unexplained gaps, currency, acquisitions, divestitures, segment reclassification, accounting-policy changes, one-time adjustments, tolerance, irrelevant and generic disclosures, invalid quotations, and overlapping evidence.
+
+Current controlled result:
+
+```text
+Single Prompt:  8 / 13 correct = 61.5% classification accuracy
+Full FinTrace: 13 / 13 correct = 100.0% classification accuracy
+
+Difference: +5 correct findings and +38.5 percentage points
+```
+
+The percentages are generated from per-finding results. Artifact generation verifies every numerator, denominator, count, and reported percentage before writing the JSON, HTML, PDF, or UI data. Any mismatch fails generation.
 
 Generated outputs:
 
