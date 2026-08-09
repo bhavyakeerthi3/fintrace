@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from fintrace.pipeline import approve_report, run_case
-from fintrace.prompts import SECOND_PASS_REVIEWER, SPECIALISTS
+from fintrace.prompts import PROMPT_VERSION, SECOND_PASS_REVIEWER, SPECIALISTS, prompt_manifest
 from fintrace.reconcile import ReconciliationError, reconcile_claims
 
 
@@ -33,11 +33,13 @@ class FinTraceTests(unittest.TestCase):
 
             self.assertEqual(report["second_pass"]["explained"], [
                 {
-                    "finding_id": "FT-002",
+                    "item_id": "FT-002",
                     "explanation_quote": "Adjusted free cash flow excludes 23 million dollars of cash restructuring payments; the measure is operating cash flow less capital expenditures plus those payments.",
                 }
             ])
-            self.assertEqual(report["second_pass"]["unresolved"][0]["finding_id"], "FT-001")
+            self.assertEqual(report["second_pass"]["unresolved"][0]["item_id"], "FT-001")
+            self.assertEqual(report["second_pass"]["aligned"], [{"item_id": "FT-003"}])
+            self.assertEqual(report["reconciliations"][0]["gap"], 10.2727)
             self.assertEqual(len(report["risk_memos"]), 1)
             self.assertRegex(report["integrity"], r"^sha256:[a-f0-9]{64}$")
 
@@ -69,7 +71,21 @@ class FinTraceTests(unittest.TestCase):
         self.assertEqual(set(SPECIALISTS), {"revenue", "related_party", "cash_flow", "language"})
         self.assertIn('"explained"', SECOND_PASS_REVIEWER)
         self.assertIn('"unresolved"', SECOND_PASS_REVIEWER)
+        self.assertIn('"aligned"', SECOND_PASS_REVIEWER)
+        self.assertIn('"item_id"', SECOND_PASS_REVIEWER)
         self.assertIn("full filing", SECOND_PASS_REVIEWER)
+        self.assertEqual(PROMPT_VERSION, "2026-08-09.v2")
+        all_prompts = json.dumps(prompt_manifest()).lower()
+        forbidden_terms = (
+            "forensic" + " accountant",
+            "forensic" + " analyst",
+            "skep" + "tic",
+            "adver" + "sarial",
+            "confirmed" + " red flag",
+            "veri" + "fier",
+        )
+        for forbidden in forbidden_terms:
+            self.assertNotIn(forbidden, all_prompts)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 
 **Executive claims checked against filed numbers.**
 
-FinTrace is an evidence-first forensic financial analysis workflow for the
+FinTrace is an evidence-first financial analysis workflow for the
 Reverie Hacks 2026 ML Prompt Engineering track. It aligns transcript claims with
 filed data, recomputes the arithmetic in code, asks a second-pass reviewer for a
 specific citable explanation, and leaves final judgment to a human analyst.

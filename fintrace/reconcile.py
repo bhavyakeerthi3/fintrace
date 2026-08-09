@@ -118,6 +118,7 @@ def second_pass(
 
     explained: list[dict[str, str]] = []
     unresolved: list[dict[str, str]] = []
+    aligned: list[dict[str, str]] = []
     by_claim: dict[str, list[Mapping[str, Any]]] = {}
     for disclosure in disclosures:
         claim_id = disclosure.get("claim_id")
@@ -125,7 +126,8 @@ def second_pass(
             by_claim.setdefault(claim_id, []).append(disclosure)
 
     for item in reconciliations:
-        if item.status != "flagged":
+        if item.status == "aligned":
+            aligned.append({"item_id": item.finding_id})
             continue
         explanation = None
         for disclosure in by_claim.get(item.claim_id, []):
@@ -141,11 +143,11 @@ def second_pass(
                     break
 
         if explanation:
-            explained.append({"finding_id": item.finding_id, "explanation_quote": explanation})
+            explained.append({"item_id": item.finding_id, "explanation_quote": explanation})
         else:
             unresolved.append(
                 {
-                    "finding_id": item.finding_id,
+                    "item_id": item.finding_id,
                     "reasoning": (
                         f"The filing-derived value is {item.computed_value:g} {item.unit} versus "
                         f"the claimed {item.claimed_value:g} {item.unit}, a {item.discrepancy:g} "
@@ -154,4 +156,4 @@ def second_pass(
                     ),
                 }
             )
-    return {"explained": explained, "unresolved": unresolved}
+    return {"explained": explained, "unresolved": unresolved, "aligned": aligned}

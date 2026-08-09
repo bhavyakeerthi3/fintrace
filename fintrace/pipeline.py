@@ -34,7 +34,7 @@ def run_case(case_path: Path, output: Path) -> dict[str, Any]:
         raise ValueError("Filing disclosures must be an array")
     review = second_pass(reconciliations, disclosures)
 
-    unresolved_by_id = {item["finding_id"]: item for item in review["unresolved"]}
+    unresolved_by_id = {item["item_id"]: item for item in review["unresolved"]}
     memos = []
     for item in reconciliations:
         if item.finding_id not in unresolved_by_id:
@@ -58,7 +58,7 @@ def run_case(case_path: Path, output: Path) -> dict[str, Any]:
     aligned = sum(item.status == "aligned" for item in reconciliations)
     flagged = sum(item.status == "flagged" for item in reconciliations)
     report: dict[str, Any] = {
-        "schema_version": "1.0",
+        "schema_version": "1.1",
         "run_id": f"fintrace-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}",
         "data_classification": case["data_classification"],
         "prompt_version": PROMPT_VERSION,
@@ -72,7 +72,7 @@ def run_case(case_path: Path, output: Path) -> dict[str, Any]:
             {"name": "specialist_cross_check", "status": "simulated", "evidence": "Versioned contracts ready; deterministic demo uses labeled claim types"},
             {"name": "aggregate_dedupe", "status": "passed", "evidence": f"{len(reconciliations)} unique claims retained"},
             {"name": "deterministic_reconciliation", "status": "passed", "evidence": f"{aligned} aligned and {flagged} outside tolerance"},
-            {"name": "second_pass_review", "status": "passed", "evidence": f"{len(review['explained'])} explained and {len(review['unresolved'])} unresolved"},
+            {"name": "second_pass_review", "status": "passed", "evidence": f"{len(review['aligned'])} aligned, {len(review['explained'])} explained, and {len(review['unresolved'])} unresolved"},
             {"name": "risk_memo", "status": "passed", "evidence": f"{len(memos)} neutral analyst memos generated"},
             {"name": "human_signoff", "status": "pending", "evidence": "Explicit analyst approval required"},
         ],

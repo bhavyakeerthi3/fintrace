@@ -19,4 +19,6 @@ class Reconciliation:
     status: str
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        result = asdict(self)
+        result["gap"] = result["discrepancy"]
+        return result

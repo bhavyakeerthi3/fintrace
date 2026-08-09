@@ -7,7 +7,7 @@ const serif = Newsreader({ subsets: ["latin"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
   title: "FinTrace — Claims checked against filed numbers",
-  description: "An evidence-first forensic financial review pipeline.",
+  description: "An evidence-first financial review pipeline.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

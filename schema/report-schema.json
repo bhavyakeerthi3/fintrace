@@ -4,22 +4,23 @@
   "type": "object",
   "required": ["schema_version", "run_id", "data_classification", "company", "period", "stages", "reconciliations", "second_pass", "risk_memos", "human_signoff", "integrity"],
   "properties": {
-    "schema_version": { "const": "1.0" },
+    "schema_version": { "const": "1.1" },
     "data_classification": { "enum": ["fictional_demo", "historical_adjudicated"] },
     "reconciliations": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["finding_id", "claimed_value", "computed_value", "discrepancy", "tolerance", "status"],
+        "required": ["finding_id", "claimed_value", "computed_value", "gap", "tolerance", "status"],
         "properties": { "status": { "enum": ["aligned", "flagged"] } }
       }
     },
     "second_pass": {
       "type": "object",
-      "required": ["explained", "unresolved"],
+      "required": ["explained", "unresolved", "aligned"],
       "properties": {
         "explained": { "type": "array" },
-        "unresolved": { "type": "array" }
+        "unresolved": { "type": "array" },
+        "aligned": { "type": "array" }
       }
     },
     "human_signoff": {

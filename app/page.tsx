@@ -48,7 +48,7 @@ export default function Home() {
 
       <section className="hero shell" id="top">
         <div className="hero-copy">
-          <p className="eyebrow">Evidence-first financial forensics</p>
+          <p className="eyebrow">Evidence-first financial review</p>
           <h1>What they said.<br />What they filed.<br /><em>What the math says.</em></h1>
           <p className="lede">FinTrace turns earnings-call claims into traceable calculations, then searches the full filing for explanations before anything reaches an analyst.</p>
           <div className="hero-actions"><button className="primary" onClick={runAnalysis}>Run the investigation <ArrowIcon /></button><a className="text-link" href="#method">See the seven-stage method</a></div>
