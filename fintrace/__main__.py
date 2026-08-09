@@ -19,6 +19,9 @@ def build_parser() -> argparse.ArgumentParser:
     approve = commands.add_parser("approve")
     approve.add_argument("report", type=Path)
     approve.add_argument("--analyst", required=True)
+    approve.add_argument("--decision", choices=("accept", "reject", "needs_review"), default="accept")
+    approve.add_argument("--note", default="Classification reviewed against the evidence package.")
+    approve.add_argument("--finding-id", help="Update one finding; omit to apply the decision to every finding")
 
     commands.add_parser("prompts")
     return parser
@@ -39,7 +42,7 @@ def main() -> int:
             }, indent=2))
             return 0
         if args.command == "approve":
-            report = approve_report(args.report, args.analyst)
+            report = approve_report(args.report, args.analyst, args.decision, args.note, args.finding_id)
             print(json.dumps(report["human_signoff"], indent=2))
             return 0
         print(json.dumps(prompt_manifest(), indent=2))

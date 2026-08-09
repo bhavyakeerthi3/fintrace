@@ -11,7 +11,7 @@ const claims: Claim[] = [
   { id: "claim-margin", finding: "FT-003", label: "GAAP operating margin", quote: "GAAP operating margin was approximately 13 percent.", claimed: "13.0%", computed: "12.90%", formula: "$16m operating income / $124m revenue", delta: "0.10 pp", source: "Income statement", status: "aligned", rationale: "The recomputed value is within the explicit 0.5 percentage-point tolerance." },
 ];
 
-const stages = [["01", "Ingest & align"], ["02", "Specialist review"], ["03", "Aggregate"], ["04", "Reconcile"], ["05", "Second pass"], ["06", "Risk memo"], ["07", "Human sign-off"]];
+const stages = [["01", "Ingest & align"], ["02", "Specialist cross-check"], ["03", "Aggregate & dedupe"], ["04", "Reconcile"], ["05", "Evidence retrieval"], ["06", "Second pass & validate"], ["07", "Analyst review"], ["08", "Human sign-off"]];
 
 function StatusMark({ status }: { status: ResultStatus }) { return <span className={`status status-${status}`}><i />{status}</span>; }
 function ArrowIcon() { return <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 10h13M11 5l5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>; }
@@ -51,7 +51,7 @@ export default function Home() {
           <p className="eyebrow">Evidence-first financial review</p>
           <h1>What they said.<br />What they filed.<br /><em>What the math says.</em></h1>
           <p className="lede">FinTrace turns earnings-call claims into traceable calculations, then searches the full filing for explanations before anything reaches an analyst.</p>
-          <div className="hero-actions"><button className="primary" onClick={runAnalysis}>Run the investigation <ArrowIcon /></button><a className="text-link" href="#method">See the seven-stage method</a></div>
+          <div className="hero-actions"><button className="primary" onClick={runAnalysis}>Run the investigation <ArrowIcon /></button><a className="text-link" href="#method">See the eight-checkpoint method</a></div>
           <p className="disclaimer">Fictional demonstration data | No accusation or inference of intent</p>
         </div>
         <div className="hero-art" aria-label="A comparison between an executive claim and filed values">
@@ -63,23 +63,23 @@ export default function Home() {
 
       <section className="method" id="method"><div className="shell">
         <div className="section-kicker"><span>01</span><p>Designed for evidence, not vibes</p></div>
-        <div className="section-heading"><h2>Every flag must survive<br />a second look.</h2><p>A model can notice. Code must calculate. The filing gets the last word - and a human signs off.</p></div>
+        <div className="section-heading"><h2>Every finding must survive<br />a second look.</h2><p>A model can notice. Code must calculate. The filing gets the last word - and a human signs off.</p></div>
         <div className="stage-grid">{stages.map(([number, name], index) => <div className="stage" key={number}><span>{number}</span><strong>{name}</strong>{index < stages.length - 1 && <b aria-hidden="true">-&gt;</b>}</div>)}</div>
       </div></section>
 
       <section className="workspace shell" id="workspace">
         <div className="section-kicker"><span>02</span><p>Interactive case file</p></div>
         <div className="workspace-head"><div><h2>Northstar Mobility</h2><p>Q2 FY2026 | fictional demonstration</p></div><button className={`run-button ${running ? "is-running" : ""}`} onClick={runAnalysis} disabled={running}><span>{running ? "Tracing evidence..." : complete ? "Run again" : "Run analysis"}</span><ArrowIcon /></button></div>
-        <div className="progress-wrap" aria-live="polite"><div className="progress-label"><span>{running ? `Stage ${activeStage + 1} of 7 | ${stages[activeStage]?.[1]}` : complete ? "Analysis complete | awaiting human sign-off" : "Ready to trace three claims"}</span><span>{running ? `${Math.round(progress)}%` : complete ? "3 / 3" : "0 / 3"}</span></div><div className="progress"><i style={{ width: `${running || complete ? progress : 0}%` }} /></div></div>
+        <div className="progress-wrap" aria-live="polite"><div className="progress-label"><span>{running ? `Stage ${activeStage + 1} of ${stages.length} | ${stages[activeStage]?.[1]}` : complete ? "Analysis complete | awaiting human sign-off" : "Ready to trace three claims"}</span><span>{running ? `${Math.round(progress)}%` : complete ? "3 / 3" : "0 / 3"}</span></div><div className="progress"><i style={{ width: `${running || complete ? progress : 0}%` }} /></div></div>
 
         <div className="case-grid">
           <aside className="claims-list" aria-label="Claims"><div className="panel-label">Transcript claims <span>3</span></div>{claims.map((item, index) => <button key={item.id} className={`claim-tab ${selected === index ? "active" : ""}`} onClick={() => setSelected(index)}><span>{item.finding}</span><strong>{item.label}</strong><small>Claimed {item.claimed}</small><StatusMark status={item.status} /></button>)}</aside>
-          <article className="evidence-panel"><div className="panel-label">Evidence trace <span>{claim.finding}</span></div><p className="quote-label">Management statement</p><blockquote>&quot;{claim.quote}&quot;</blockquote><div className="source-row"><span>Source</span><strong>Q2 earnings call | prepared remarks</strong></div><div className="connector"><span>checked against</span></div><div className="filing-card"><div><span>Filed source</span><strong>{claim.source}</strong></div><span className="verified">OK - located</span></div><p className="rationale">{claim.rationale}</p></article>
+          <article className="evidence-panel"><div className="panel-label">Evidence trace <span>{claim.finding}</span></div><p className="quote-label">Management statement</p><blockquote>&quot;{claim.quote}&quot;</blockquote><div className="source-row"><span>Source</span><strong>Q2 earnings call | prepared remarks</strong></div><div className="connector"><span>checked against</span></div><div className="filing-card"><div><span>Filed source</span><strong>{claim.source}</strong></div><span className="verified">{claim.status === "explained" ? "QUOTE VALIDATED" : claim.status === "unresolved" ? "2 PASSAGES REVIEWED" : "MATH VERIFIED"}</span></div><p className="rationale">{claim.rationale}</p></article>
           <aside className="ledger"><div className="panel-label">Calculation ledger <span>deterministic</span></div><div className="ledger-values"><div><span>Claimed</span><strong>{claim.claimed}</strong></div><div><span>Computed</span><strong>{claim.computed}</strong></div></div><div className="formula"><span>Formula</span><code>{claim.formula}</code></div><div className="delta"><span>Absolute gap</span><strong>{claim.delta}</strong></div><div className="verdict"><span>Second-pass verdict</span><StatusMark status={claim.status} /></div><button className="memo-button" onClick={() => setMemoOpen((value) => !value)}>{memoOpen ? "Hide analyst memo" : "Open analyst memo"}<ArrowIcon /></button></aside>
         </div>
 
         {memoOpen && <div className="memo" role="region" aria-label="Analyst memo"><div><span>ANALYST MEMO | {claim.finding}</span><StatusMark status={claim.status} /></div><p>{claim.status === "unresolved" ? "The stated organic growth rate cannot be reproduced from the cited filing values. The filing names acquisition effects but does not quantify them, so the 10.27 percentage-point gap remains unresolved. Escalate for source-document review; do not infer intent." : claim.status === "explained" ? "The initial gap is fully reconciled by a specifically disclosed $23 million restructuring adjustment. Preserve the quotation and mark this finding explained." : "The claim agrees with the filed values within the declared calculation tolerance. No escalation is recommended."}</p></div>}
-        <div className="signoff"><div><span className="signoff-icon">{signed ? "OK" : "07"}</span><div><strong>{signed ? "Review signed" : "Human judgment stays in the loop"}</strong><p>{signed ? "Demo Analyst | evidence trail preserved" : "FinTrace describes inconsistencies. An analyst decides what they mean."}</p></div></div><button className={signed ? "signed" : ""} onClick={() => setSigned(true)} disabled={!complete || signed}>{signed ? "Signed off" : complete ? "Sign off demo" : "Run analysis first"}</button></div>
+        <div className="signoff"><div><span className="signoff-icon">{signed ? "OK" : "08"}</span><div><strong>{signed ? "Review signed" : "Human judgment stays in the loop"}</strong><p>{signed ? "Demo Analyst | evidence trail preserved" : "FinTrace describes inconsistencies. An analyst decides what they mean."}</p></div></div><button className={signed ? "signed" : ""} onClick={() => setSigned(true)} disabled={!complete || signed}>{signed ? "Signed off" : complete ? "Sign off demo" : "Run analysis first"}</button></div>
       </section>
 
       <section className="benchmark" id="benchmark"><div className="shell benchmark-inner">

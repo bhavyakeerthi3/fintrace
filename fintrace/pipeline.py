@@ -7,8 +7,21 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from .prompts import PROMPT_VERSION
-from .reconcile import reconcile_claims, second_pass
+from .prompts import PROMPT_VERSION, SECOND_PASS_REVIEWER
+from .reconcile import reconcile_claims
+from .stages import (
+    ModelCall,
+    aggregate_findings,
+    attach_calculations,
+    cross_period_regression,
+    generate_risk_memos,
+    ingest_and_align,
+    pending_human_review,
+    retrieve_filing_evidence,
+    run_specialists,
+    second_pass_review,
+    validate_explanation_quotes,
+)
 
 
 def _now() -> str:
@@ -21,44 +34,68 @@ def _digest(report: dict[str, Any]) -> str:
     return "sha256:" + hashlib.sha256(encoded).hexdigest()
 
 
-def run_case(case_path: Path, output: Path) -> dict[str, Any]:
+def _model_second_pass(
+    call: ModelCall,
+    case: dict[str, Any],
+    findings: list[dict[str, Any]],
+    calculations: list[dict[str, Any]],
+    evidence: list[dict[str, Any]],
+) -> dict[str, list[dict[str, str]]]:
+    response = call(
+        SECOND_PASS_REVIEWER,
+        {
+            "findings": findings,
+            "calculations": calculations,
+            "candidate_evidence": evidence,
+            "filing": case.get("filing", {}),
+        },
+    )
+    if not isinstance(response, dict):
+        raise ValueError("Second-pass reviewer returned an invalid object")
+    explained = response.get("explained")
+    unresolved = response.get("unresolved")
+    if not isinstance(explained, list) or not isinstance(unresolved, list):
+        raise ValueError("Second-pass reviewer must return explained and unresolved arrays")
+    return {
+        "explained": [dict(item) for item in explained if isinstance(item, dict)],
+        "unresolved": [dict(item) for item in unresolved if isinstance(item, dict)],
+    }
+
+
+def run_case(
+    case_path: Path,
+    output: Path,
+    specialist_call: ModelCall | None = None,
+    second_pass_call: ModelCall | None = None,
+) -> dict[str, Any]:
+    """Run the complete auditable pipeline for one aligned reporting period."""
+
     started = time.perf_counter()
     started_at = _now()
     case = json.loads(case_path.read_text(encoding="utf-8"))
-    if case.get("data_classification") != "fictional_demo":
-        raise ValueError("This first engine version accepts only explicitly fictional demo data")
+    if case.get("data_classification") not in {"fictional_demo", "historical_adjudicated"}:
+        raise ValueError("FinTrace accepts only fictional demos or historical adjudicated cases")
 
+    ingestion = ingest_and_align(case)
     reconciliations = reconcile_claims(case)
-    disclosures = case.get("filing", {}).get("disclosures", [])
-    if not isinstance(disclosures, list):
-        raise ValueError("Filing disclosures must be an array")
-    review = second_pass(reconciliations, disclosures)
+    specialist_findings = run_specialists(case, reconciliations, specialist_call)
+    aggregated_findings = aggregate_findings(specialist_findings)
+    calculations = attach_calculations(case, aggregated_findings, reconciliations)
+    evidence_retrieval = retrieve_filing_evidence(case, aggregated_findings)
+    initial_review = (
+        _model_second_pass(second_pass_call, case, aggregated_findings, calculations, evidence_retrieval)
+        if second_pass_call
+        else second_pass_review(case, aggregated_findings, calculations)
+    )
+    final_review, quote_validation = validate_explanation_quotes(case, initial_review)
+    risk_memos = generate_risk_memos(final_review, aggregated_findings, calculations, evidence_retrieval)
+    cross_period = cross_period_regression(final_review["unresolved"], case.get("later_period"))
+    human_signoff = pending_human_review(final_review)
 
-    unresolved_by_id = {item["item_id"]: item for item in review["unresolved"]}
-    memos = []
-    for item in reconciliations:
-        if item.finding_id not in unresolved_by_id:
-            continue
-        memos.append(
-            {
-                "finding_id": item.finding_id,
-                "title": f"Unresolved {item.metric_type.replace('_', ' ')} discrepancy",
-                "memo": (
-                    f"Management stated: \"{item.claim_quote}\" The filing-derived calculation is "
-                    f"{item.computed_value:g} {item.unit}, compared with the claimed "
-                    f"{item.claimed_value:g} {item.unit}. The {item.discrepancy:g} difference "
-                    f"exceeds the {item.tolerance:g} tolerance. Filing references: "
-                    f"{'; '.join(item.filing_references)}. No citable disclosure in the supplied "
-                    "filing data reconciles the difference. This describes an inconsistency only "
-                    "and makes no claim about intent."
-                ),
-            }
-        )
-
-    aligned = sum(item.status == "aligned" for item in reconciliations)
-    flagged = sum(item.status == "flagged" for item in reconciliations)
+    candidate_count = sum(len(items) for items in specialist_findings.values())
+    valid_quotes = sum(item["quote_valid"] for item in quote_validation)
     report: dict[str, Any] = {
-        "schema_version": "1.1",
+        "schema_version": "2.0",
         "run_id": f"fintrace-{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}",
         "data_classification": case["data_classification"],
         "prompt_version": PROMPT_VERSION,
@@ -68,18 +105,26 @@ def run_case(case_path: Path, output: Path) -> dict[str, Any]:
         "company": case["company"],
         "period": case["period"],
         "stages": [
-            {"name": "ingest_align", "status": "passed", "evidence": f"{len(reconciliations)} structured claims aligned"},
-            {"name": "specialist_cross_check", "status": "simulated", "evidence": "Versioned contracts ready; deterministic demo uses labeled claim types"},
-            {"name": "aggregate_dedupe", "status": "passed", "evidence": f"{len(reconciliations)} unique claims retained"},
-            {"name": "deterministic_reconciliation", "status": "passed", "evidence": f"{aligned} aligned and {flagged} outside tolerance"},
-            {"name": "second_pass_review", "status": "passed", "evidence": f"{len(review['aligned'])} aligned, {len(review['explained'])} explained, and {len(review['unresolved'])} unresolved"},
-            {"name": "risk_memo", "status": "passed", "evidence": f"{len(memos)} neutral analyst memos generated"},
-            {"name": "human_signoff", "status": "pending", "evidence": "Explicit analyst approval required"},
+            {"name": "ingest_align", "status": "passed", "evidence": f"{len(ingestion['claims'])} claims aligned to filing references"},
+            {"name": "specialist_cross_check", "status": "passed", "evidence": f"{candidate_count} candidates across four isolated scopes"},
+            {"name": "aggregate_dedupe", "status": "passed", "evidence": f"{len(aggregated_findings)} stable findings retained"},
+            {"name": "deterministic_reconciliation", "status": "passed", "evidence": f"{sum(item['calculation'] is not None for item in calculations)} authoritative calculations attached"},
+            {"name": "filing_evidence_retrieval", "status": "passed", "evidence": f"{sum(len(item['candidate_evidence']) for item in evidence_retrieval)} candidate passages retrieved"},
+            {"name": "second_pass_quote_validation", "status": "passed", "evidence": f"{len(final_review['explained'])} explained, {len(final_review['unresolved'])} unresolved, {valid_quotes} quotes validated"},
+            {"name": "analyst_review", "status": "passed", "evidence": f"{len(risk_memos)} unresolved-item memos; {len(cross_period)} cross-period results"},
+            {"name": "human_signoff", "status": "pending", "evidence": f"{len(human_signoff['decisions'])} finding decisions require review"},
         ],
+        "ingestion": ingestion,
+        "specialist_findings": specialist_findings,
+        "aggregated_findings": aggregated_findings,
         "reconciliations": [item.to_dict() for item in reconciliations],
-        "second_pass": review,
-        "risk_memos": memos,
-        "human_signoff": {"status": "pending", "analyst": None, "approved_at": None},
+        "calculations": calculations,
+        "evidence_retrieval": evidence_retrieval,
+        "second_pass": final_review,
+        "quote_validation": quote_validation,
+        "risk_memos": risk_memos,
+        "cross_period": cross_period,
+        "human_signoff": human_signoff,
     }
     report["integrity"] = _digest(report)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -87,18 +132,41 @@ def run_case(case_path: Path, output: Path) -> dict[str, Any]:
     return report
 
 
-def approve_report(path: Path, analyst: str) -> dict[str, Any]:
+def approve_report(
+    path: Path,
+    analyst: str,
+    decision: str = "accept",
+    note: str = "Classification reviewed against the evidence package.",
+    finding_id: str | None = None,
+) -> dict[str, Any]:
     analyst = analyst.strip()
     if not analyst or len(analyst) > 120:
         raise ValueError("Analyst name must be between 1 and 120 characters")
+    if decision not in {"accept", "reject", "needs_review"}:
+        raise ValueError("Decision must be accept, reject, or needs_review")
+    if len(note) > 1000:
+        raise ValueError("Analyst note must be 1000 characters or fewer")
     report = json.loads(path.read_text(encoding="utf-8"))
     signoff = report.get("human_signoff")
-    if not isinstance(signoff, dict):
+    if not isinstance(signoff, dict) or not isinstance(signoff.get("decisions"), list):
         raise ValueError("Invalid report")
-    signoff.update({"status": "approved", "analyst": analyst, "approved_at": _now()})
+    matched = False
+    for item in signoff["decisions"]:
+        if isinstance(item, dict) and (finding_id is None or item.get("finding_id") == finding_id):
+            item.update({"decision": decision, "analyst_note": note})
+            matched = True
+    if finding_id is not None and not matched:
+        raise ValueError(f"Finding {finding_id} does not exist in this report")
+    status = "pending" if any(item.get("decision") == "needs_review" for item in signoff["decisions"] if isinstance(item, dict)) else "complete"
+    signoff.update({"status": status, "analyst": analyst, "reviewed_at": _now()})
     for stage in report.get("stages", []):
         if isinstance(stage, dict) and stage.get("name") == "human_signoff":
-            stage.update({"status": "passed", "evidence": f"Approved by {analyst}"})
+            stage.update(
+                {
+                    "status": "pending" if status == "pending" else "passed",
+                    "evidence": f"Per-finding decisions recorded by {analyst}",
+                }
+            )
     report["integrity"] = _digest(report)
     path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return report

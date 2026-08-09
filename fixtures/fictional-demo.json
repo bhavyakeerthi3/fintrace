@@ -61,14 +61,45 @@
       {
         "claim_id": "claim-fcf",
         "quote": "Adjusted free cash flow excludes 23 million dollars of cash restructuring payments; the measure is operating cash flow less capital expenditures plus those payments.",
+        "section": "Non-GAAP reconciliation",
+        "location": "Fictional 10-Q, p. 31",
         "numeric_adjustment": 23.0,
         "direction": "add"
       },
       {
         "claim_id": "claim-growth",
         "quote": "Reported segment revenue includes acquired operations; organic growth excludes acquisition effects.",
+        "section": "Note 3 - Segment information",
+        "location": "Fictional 10-Q, p. 18",
         "numeric_adjustment": 0.0,
         "direction": "add"
+      }
+    ],
+    "sections": [
+      {
+        "section": "Consolidated statements of operations",
+        "location": "Fictional 10-Q, p. 6",
+        "text": "Total revenue was 124 million dollars and operating income was 16 million dollars for the quarter."
+      },
+      {
+        "section": "Consolidated statements of cash flows",
+        "location": "Fictional 10-Q, p. 7",
+        "text": "Net cash provided by operating activities was 96 million dollars. Purchases of property and equipment were 34 million dollars."
+      },
+      {
+        "section": "Note 3 - Segment information",
+        "location": "Fictional 10-Q, p. 18",
+        "text": "Segment revenue was 124 million dollars compared with 110 million dollars in the prior-year quarter. Reported segment revenue includes acquired operations; organic growth excludes acquisition effects. The acquisition effect was not quantified."
+      },
+      {
+        "section": "MD&A - Liquidity and capital resources",
+        "location": "Fictional 10-Q, p. 27",
+        "text": "Operating cash flow reflects working-capital movements and cash restructuring payments during the quarter."
+      },
+      {
+        "section": "Non-GAAP reconciliation",
+        "location": "Fictional 10-Q, p. 31",
+        "text": "Adjusted free cash flow excludes 23 million dollars of cash restructuring payments; the measure is operating cash flow less capital expenditures plus those payments."
       }
     ]
   }

@@ -12,15 +12,18 @@ or person of fraud.
 
 ## Current engine
 
-The first version implements the hard, reproducible center of the workflow:
+The full implementation runs eight auditable checkpoints:
 
-1. Load structured transcript claims and filing line items.
-2. Recompute growth, free cash flow, margin, and absolute-value claims.
-3. Compare claimed and computed values with explicit tolerances.
-4. Search supplied filing disclosures for a citable numeric reconciliation.
-5. Split flags into `explained` and `unresolved`.
-6. Generate neutral memos for unresolved inconsistencies.
-7. Require explicit analyst sign-off and update the report integrity digest.
+1. Ingest and align transcript passages, filing tables, footnotes, and MD&A.
+2. Run four scoped specialist reviews for revenue, cash flow, related-party items, and language patterns.
+3. Aggregate and deduplicate overlapping findings under stable finding IDs.
+4. Recompute growth, free cash flow, margins, and absolute-value claims in deterministic code with explicit tolerances.
+5. Rank multiple filing passages that could explain each finding.
+6. Perform a filing-only second pass, then validate every explanation quote against the source text.
+7. Create neutral risk memos only for unresolved findings and compare them with prior-period disclosures.
+8. Require an accept, reject, or needs-review decision for every finding before final sign-off.
+
+Model calls are injected through specialist and second-pass hooks. The fictional demo uses a deterministic adapter so the full report is reproducible without API keys.
 
 The demo uses a clearly labeled fictional company. This avoids presenting
 unfinished analysis as a claim about a real issuer.
@@ -75,7 +78,7 @@ python -m fintrace prompts
 After reviewing a report:
 
 ```bash
-python -m fintrace approve outputs/fintrace-demo-report.json --analyst "Your Name"
+python -m fintrace approve outputs/fintrace-demo-report.json --analyst "Your Name" --finding-id F-001 --decision accept --note "Evidence reviewed"
 ```
 
 ## Demo result
@@ -90,8 +93,8 @@ explained, and unresolved after the second pass.
 
 ## Next milestones
 
-- transcript and SEC filing parsers;
-- four live specialist model calls plus aggregation;
-- historical, adjudicated benchmark cases;
-- cross-quarter regression;
-- workflow PNG, sample comparison, and final documentation.
+- connect production transcript and SEC filing parsers;
+- configure live specialist model providers through the existing hooks;
+- add historical, adjudicated benchmark cases;
+- expand the fictional cross-period fixture set;
+- publish the evaluation methodology and sample comparison.

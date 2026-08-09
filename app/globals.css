@@ -64,7 +64,7 @@ a { color: inherit; text-decoration: none; }
 .section-heading h2, .workspace-head h2, .benchmark h2 { margin: 0; font-family: var(--font-serif), Georgia, serif; font-weight: 400; letter-spacing: -.04em; }
 .section-heading h2 { font-size: 52px; line-height: 1.02; }
 .section-heading > p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.65; }
-.stage-grid { display: grid; grid-template-columns: repeat(7, 1fr); margin-top: 60px; border-top: 1px solid #cfc9bd; }
+.stage-grid { display: grid; grid-template-columns: repeat(8, 1fr); margin-top: 60px; border-top: 1px solid #cfc9bd; }
 .stage { position: relative; min-height: 130px; padding: 20px 14px 0 0; }
 .stage::before { position: absolute; top: -4px; left: 0; content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--wine); }
 .stage span { display: block; color: var(--wine); font-family: ui-monospace, monospace; font-size: 10px; }
