@@ -1,0 +1,11 @@
+[project]
+name = "fintrace"
+version = "0.1.0"
+description = "Evidence-first financial claim reconciliation"
+requires-python = ">=3.11"
+
+[project.scripts]
+fintrace = "fintrace.__main__:main"
+
+[tool.unittest]
+start-directory = "tests"

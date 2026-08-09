@@ -1,0 +1,75 @@
+{
+  "data_classification": "fictional_demo",
+  "company": "Northstar Mobility (fictional)",
+  "period": "Q2 FY2026",
+  "claims": [
+    {
+      "id": "claim-growth",
+      "quote": "Organic segment revenue grew 23 percent year over year, reflecting broad-based demand.",
+      "metric_type": "growth_percent",
+      "claimed_value": 23.0,
+      "unit": "percentage points",
+      "tolerance": 2.0,
+      "operands": {
+        "current": "segment_revenue_current",
+        "prior": "segment_revenue_prior"
+      }
+    },
+    {
+      "id": "claim-fcf",
+      "quote": "We delivered record adjusted free cash flow of 85 million dollars.",
+      "metric_type": "free_cash_flow",
+      "claimed_value": 85.0,
+      "unit": "USD millions",
+      "tolerance": 1.0,
+      "operands": {
+        "operating_cash_flow": "operating_cash_flow",
+        "capital_expenditures": "capital_expenditures"
+      }
+    },
+    {
+      "id": "claim-margin",
+      "quote": "GAAP operating margin was approximately 13 percent.",
+      "metric_type": "margin_percent",
+      "claimed_value": 13.0,
+      "unit": "percentage points",
+      "tolerance": 0.5,
+      "operands": {
+        "income": "operating_income",
+        "revenue": "total_revenue"
+      }
+    }
+  ],
+  "filing": {
+    "metrics": {
+      "segment_revenue_current": 124.0,
+      "segment_revenue_prior": 110.0,
+      "operating_cash_flow": 96.0,
+      "capital_expenditures": 34.0,
+      "operating_income": 16.0,
+      "total_revenue": 124.0
+    },
+    "references": {
+      "segment_revenue_current": "Fictional 10-Q, Note 3 segment table, current quarter revenue",
+      "segment_revenue_prior": "Fictional 10-Q, Note 3 segment table, prior-year quarter revenue",
+      "operating_cash_flow": "Fictional 10-Q, cash-flow statement, net cash from operations",
+      "capital_expenditures": "Fictional 10-Q, cash-flow statement, purchases of property and equipment",
+      "operating_income": "Fictional 10-Q, income statement, operating income",
+      "total_revenue": "Fictional 10-Q, income statement, total revenue"
+    },
+    "disclosures": [
+      {
+        "claim_id": "claim-fcf",
+        "quote": "Adjusted free cash flow excludes 23 million dollars of cash restructuring payments; the measure is operating cash flow less capital expenditures plus those payments.",
+        "numeric_adjustment": 23.0,
+        "direction": "add"
+      },
+      {
+        "claim_id": "claim-growth",
+        "quote": "Reported segment revenue includes acquired operations; organic growth excludes acquisition effects.",
+        "numeric_adjustment": 0.0,
+        "direction": "add"
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+outputs/
+work/
+.env*
+!.env.example
+node_modules/
+.next/
+.vercel/
+*.tsbuildinfo
