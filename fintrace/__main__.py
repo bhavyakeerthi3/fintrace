@@ -4,10 +4,10 @@ import argparse
 import json
 from pathlib import Path
 
-from .evaluation import evaluate_suite, validate_benchmark_integrity
+from .evaluation import evaluate_benchmark_bundle
 from .pipeline import approve_report, run_case
 from .prompts import prompt_manifest
-from .providers import LiveLLMProvider, LocalDeterministicProvider
+from .providers import LiveLLMProvider, LocalDeterministicProvider, ProviderError
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -25,6 +25,10 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark = commands.add_parser("benchmark")
     benchmark.add_argument("--suite", type=Path, default=Path("fixtures/benchmark-suite.json"))
     benchmark.add_argument("--output", type=Path, default=Path("outputs/fintrace-benchmark-results.json"))
+    benchmark.add_argument("--provider", choices=("local", "live"), default="local")
+    benchmark.add_argument("--model", default="gpt-5-mini")
+    benchmark.add_argument("--temperature", type=float, default=0.0)
+    benchmark.add_argument("--token-limit", type=int, default=1800)
 
     approve = commands.add_parser("approve")
     approve.add_argument("report", type=Path)
@@ -53,16 +57,21 @@ def main() -> int:
             }, indent=2))
             return 0
         if args.command == "benchmark":
-            result = evaluate_suite(args.suite)
-            validate_benchmark_integrity(result)
+            live_provider = None
+            if args.provider == "live":
+                live_provider = LiveLLMProvider(args.model, args.temperature, args.token_limit)
+            result = evaluate_benchmark_bundle(args.suite, live_provider)
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+            reference_metrics = result["deterministic_reference"]["ablations"]["full_fintrace"]["metrics"]
+            live_metrics = result["live_run"]["metrics"] if result["live_run"] is not None else None
             print(json.dumps({
                 "output": str(args.output),
                 "cases": result["case_count"],
                 "findings": result["finding_count"],
-                "baseline_classification_accuracy": result["ablations"]["single_prompt"]["metrics"]["classification_accuracy"],
-                "fintrace_classification_accuracy": result["ablations"]["full_fintrace"]["metrics"]["classification_accuracy"],
+                "deterministic_reference_classification_accuracy": reference_metrics["classification_accuracy"],
+                "live_classification_accuracy": live_metrics["classification_accuracy"] if live_metrics else None,
+                "live_model": result["live_run"]["model"] if result["live_run"] else None,
                 "integrity_checks": result["integrity_checks"],
             }, indent=2))
             return 0
@@ -72,7 +81,7 @@ def main() -> int:
             return 0
         print(json.dumps(prompt_manifest(), indent=2))
         return 0
-    except (OSError, ValueError, KeyError, json.JSONDecodeError) as error:
+    except (OSError, ValueError, KeyError, json.JSONDecodeError, ProviderError) as error:
         print(json.dumps({"error": str(error)}))
         return 1
 

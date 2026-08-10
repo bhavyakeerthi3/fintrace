@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import time
+import urllib.error
 import urllib.request
 from abc import ABC, abstractmethod
 from datetime import UTC, datetime
@@ -91,6 +94,12 @@ class LiveLLMProvider(ModelProvider):
         super().__init__(model, temperature, token_limit)
         self.endpoint = endpoint or os.getenv("FINTRACE_LLM_ENDPOINT", "https://api.openai.com/v1/chat/completions")
         self.api_key = api_key or os.getenv("FINTRACE_LLM_API_KEY", "")
+        self.retry_events: list[dict[str, Any]] = []
+
+    def metadata(self) -> dict[str, Any]:
+        metadata = super().metadata()
+        metadata["retry_events"] = list(self.retry_events)
+        return metadata
 
     def _execute(self, stage: str, payload: dict[str, Any], model: str | None, temperature: float | None) -> dict[str, Any]:
         if not self.api_key:
@@ -111,16 +120,44 @@ class LiveLLMProvider(ModelProvider):
         request = urllib.request.Request(
             self.endpoint,
             data=body,
-            headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": "FinTrace/0.2",
+            },
             method="POST",
         )
-        try:
-            with urllib.request.urlopen(request, timeout=90) as response:
-                raw = json.loads(response.read().decode("utf-8"))
-            content = raw["choices"][0]["message"]["content"]
-            output = json.loads(content)
-        except (OSError, KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
-            raise ProviderError(f"Live model execution failed: {error}") from error
+        for attempt in range(6):
+            try:
+                with urllib.request.urlopen(request, timeout=90) as response:
+                    raw = json.loads(response.read().decode("utf-8"))
+                content = raw["choices"][0]["message"]["content"]
+                output = json.loads(content)
+                break
+            except urllib.error.HTTPError as error:
+                try:
+                    detail = error.read().decode("utf-8", errors="replace")
+                    parsed = json.loads(detail)
+                    detail = str(parsed.get("error", {}).get("message", detail))
+                except (OSError, TypeError, json.JSONDecodeError):
+                    detail = error.reason or "no response detail"
+                retry_match = re.search(r"try again in\s+([0-9.]+)(ms|s)", detail, flags=re.IGNORECASE)
+                if error.code == 429 and retry_match and attempt < 5:
+                    parsed_delay = float(retry_match.group(1)) / 1000 if retry_match.group(2).casefold() == "ms" else float(retry_match.group(1))
+                    delay = min(parsed_delay + 1.0, 60.0)
+                    self.retry_events.append({
+                        "stage": stage,
+                        "attempt": attempt + 1,
+                        "http_status": 429,
+                        "delay_seconds": round(delay, 3),
+                        "recorded_at": datetime.now(UTC).isoformat(),
+                    })
+                    time.sleep(delay)
+                    continue
+                raise ProviderError(f"Live model execution failed with HTTP {error.code}: {detail[:500]}") from error
+            except (OSError, KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+                raise ProviderError(f"Live model execution failed: {error}") from error
         self.executions.append({
             "stage": stage,
             "model": selected_model,

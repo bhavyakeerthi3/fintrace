@@ -26,6 +26,8 @@ The included case uses a clearly labeled fictional company. FinTrace describes o
 
 The benchmark uses fictional companies and controlled disclosures.
 
+> **Design boundary:** The Python engine (`fintrace/`) is the authoritative implementation. The public Next.js page presents a versioned fictional fixture for demo reliability and does not execute the pipeline live in the browser. This is an intentional design choice, not a limitation of the workflow — full live execution is available via `python -m fintrace demo --provider live`.
+
 ## What happens inside
 
 ```mermaid
@@ -142,7 +144,7 @@ The overall sign-off remains pending until every finding has been accepted or re
 
 ## Important system boundary
 
-The Python engine is the authoritative implementation. The public Next.js page is an interactive presentation of the same versioned fictional fixture; its animation does not execute the Python pipeline in the browser.
+The design boundary stated above is intentional: Python owns execution and validation, while Next.js presents the versioned public fixture.
 
 `ModelProvider` has two implementations: `LocalDeterministicProvider` for reproducible public runs and `LiveLLMProvider` for an OpenAI-compatible endpoint. Live execution is configured with server-side `FINTRACE_LLM_API_KEY` and optional `FINTRACE_LLM_ENDPOINT` values. Secrets are never included in reports or the Prompt Inspector.
 
@@ -255,11 +257,21 @@ Inspect the current model contracts:
 python -m fintrace prompts
 ```
 
-Run the 12-case baseline and ablation benchmark:
+Write the reproducible deterministic reference benchmark:
 
 ```bash
 python -m fintrace benchmark
 ```
+
+Run the same 12-case / 13-finding suite through a configured live model and write both runs to one results file:
+
+```bash
+export FINTRACE_LLM_API_KEY="..."
+export FINTRACE_LLM_ENDPOINT="https://api.openai.com/v1/chat/completions"
+python -m fintrace benchmark --provider live --model gpt-5-mini --temperature 0
+```
+
+On PowerShell, set the variables with `$env:FINTRACE_LLM_API_KEY` and `$env:FINTRACE_LLM_ENDPOINT`. The live command never falls back to the deterministic provider: missing credentials, transport failures, invalid JSON, and schema violations return a non-zero exit and do not write a result file.
 
 Use a configured live provider:
 
@@ -292,7 +304,8 @@ Open `http://localhost:3000`.
 
 ```bash
 python -m fintrace demo
-python -m fintrace benchmark
+python -m fintrace benchmark --provider live --model <configured-model>
+python scripts/generate_artifacts.py
 python -m unittest discover -s tests -v
 npm run lint
 npm run build
@@ -305,7 +318,12 @@ The release gate includes Python tests, ESLint, the Next.js production build, JS
 
 The repository includes 12 controlled fictional cases containing 13 independently evaluated findings. They cover unexplained gaps, currency, acquisitions, divestitures, segment reclassification, accounting-policy changes, one-time adjustments, tolerance, irrelevant and generic disclosures, invalid quotations, and overlapping evidence.
 
-Current controlled result:
+The result file keeps two independent sections:
+
+- `deterministic_reference` is the unchanged, reproducible local-provider baseline, including its four ablations;
+- `live_run` contains the live model name, temperature, UTC run timestamp, per-finding outputs, and independently computed metrics.
+
+The sections are never averaged or blended. The deterministic reference currently reports:
 
 ```text
 Single Prompt:  8 / 13 correct = 61.5% classification accuracy
@@ -314,7 +332,7 @@ Full FinTrace: 13 / 13 correct = 100.0% classification accuracy
 Difference: +5 correct findings and +38.5 percentage points
 ```
 
-The percentages are generated from per-finding results. Artifact generation verifies every numerator, denominator, count, and reported percentage before writing the JSON, HTML, PDF, or UI data. Any mismatch fails generation.
+The percentages are generated from per-finding results. Artifact generation verifies every numerator, denominator, count, and reported percentage before writing HTML, PDF, or UI data. It also requires a validated `live_run`; any missing run or metric mismatch fails generation.
 
 Earlier builds displayed `55.6` and `74.9` as if they were headline accuracy percentages. They are retained only as a **composite control index**, measured in points out of 100 and not as classification accuracy:
 
@@ -335,10 +353,10 @@ Generated outputs:
 
 - `outputs/fintrace-benchmark-results.json` - complete measured results;
 - `outputs/fintrace-ml-workflow.png` - submission-ready ML workflow;
-- `outputs/fintrace-samples.html` - case-by-case single-prompt comparison;
-- `outputs/fintrace-samples.pdf` - printable samples artifact.
+- `outputs/fintrace-samples.html` - case-by-case deterministic-reference vs. live-model comparison;
+- `outputs/fintrace-samples.pdf` - printable side-by-side comparison artifact.
 
-The current controlled run uses the local deterministic adapter. Its percentages describe only this fixture suite and are not claims about general LLM performance.
+Both runs describe only this fixture suite and are not claims about general LLM performance. Any disagreement is shown explicitly in the generated HTML and PDF.
 
 ## Deployment
 

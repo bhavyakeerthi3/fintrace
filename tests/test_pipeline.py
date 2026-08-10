@@ -5,10 +5,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fintrace.evaluation import evaluate_suite, load_benchmark, validate_benchmark_integrity
+from fintrace.evaluation import evaluate_benchmark_bundle, evaluate_suite, load_benchmark, validate_benchmark_integrity
 from fintrace.pipeline import approve_report, run_case
 from fintrace.prompts import PROMPT_VERSION, SECOND_PASS_REVIEWER, SPECIALISTS, PromptValidationError, prompt_manifest, validate_prompt_output
-from fintrace.providers import LocalDeterministicProvider
+from fintrace.providers import LiveLLMProvider, LocalDeterministicProvider, ProviderError
 from fintrace.reconcile import ReconciliationError, reconcile_claims
 from fintrace.stages import (
     aggregate_findings,
@@ -209,7 +209,7 @@ class FinTraceTests(unittest.TestCase):
             "case_count": 12,
             "finding_count": 13,
             "modes_checked": 4,
-            "percentages_checked": 16,
+            "percentages_checked": 24,
         })
         metrics = result["ablations"]["specialists_plus_calculation"]["metrics"]
         self.assertEqual(metrics["correct_classifications"], 9)
@@ -224,6 +224,54 @@ class FinTraceTests(unittest.TestCase):
         metrics["classification_accuracy"] = 55.6
         with self.assertRaisesRegex(ValueError, "does not match"):
             validate_benchmark_integrity(result)
+
+    def test_live_benchmark_fails_loudly_without_credentials(self) -> None:
+        provider = LiveLLMProvider(api_key="")
+        provider.api_key = ""
+        with self.assertRaisesRegex(ProviderError, "FINTRACE_LLM_API_KEY"):
+            evaluate_benchmark_bundle(BENCHMARK, provider)
+
+    def test_live_benchmark_keeps_reference_and_revalidates_quotes(self) -> None:
+        class ScriptedLiveProvider(LiveLLMProvider):
+            def __init__(self) -> None:
+                super().__init__(model="scripted-live", api_key="test-only")
+
+            def specialist_call(self, prompt, model=None, temperature=None, payload=None):
+                serialized = json.dumps(payload)
+                if "candidate_explanation" in serialized or "expected_result" in serialized:
+                    raise AssertionError("Benchmark adjudication leaked into specialist input")
+                self._record(prompt, "1.0.0")
+                return {"findings": []}
+
+            def second_pass_call(self, prompt="second_pass", model=None, temperature=None, payload=None):
+                serialized = json.dumps(payload)
+                if "candidate_explanation" in serialized or "expected_result" in serialized:
+                    raise AssertionError("Benchmark adjudication leaked into second-pass input")
+                self._record("second_pass", "1.0.0")
+                return {
+                    "explained": [{
+                        "finding_id": "B09-F1",
+                        "explanation_quote": "The company had 30 million dollars available under its undrawn revolving credit facility.",
+                    }],
+                    "unresolved": [
+                        {"finding_id": item["finding_id"], "reasoning": "No validated explanation."}
+                        for item in payload["findings"]
+                        if item["finding_id"] != "B09-F1"
+                    ],
+                }
+
+            def metadata(self):
+                metadata = super().metadata()
+                metadata["provider"] = "LiveLLMProvider"
+                return metadata
+
+        bundle = evaluate_benchmark_bundle(BENCHMARK, ScriptedLiveProvider())
+        self.assertEqual(bundle["deterministic_reference"]["ablations"]["full_fintrace"]["metrics"]["classification_accuracy"], 100.0)
+        self.assertEqual(len(bundle["live_run"]["outputs"]), 13)
+        b09 = next(item for item in bundle["live_run"]["outputs"] if item["finding_id"] == "B09-F1")
+        self.assertEqual(b09["classification"], "unresolved")
+        self.assertEqual(b09["transition"], "explained_to_unresolved")
+        self.assertEqual(bundle["integrity_checks"]["live_run"]["status"], "passed")
 
 
 if __name__ == "__main__":
