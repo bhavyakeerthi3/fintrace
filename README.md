@@ -55,7 +55,7 @@ The pipeline loads structured transcript claims and filing data. Every claim is 
 
 Speaker-attributed transcript text can also be normalized into individual passages. Invalid case structures are rejected before analysis begins.
 
-### 2. Run four isolated specialist scopes
+### 2. Run four scope-isolated specialist passes
 
 FinTrace separates review into four narrow scopes:
 
@@ -64,7 +64,7 @@ FinTrace separates review into four narrow scopes:
 - related-party transactions, guarantees, and commitments;
 - observable language and response patterns.
 
-When a live model provider is selected, the four calls run in parallel through the provider abstraction. Each scope receives its own versioned prompt and returns schema-validated JSON. Keeping the scopes separate reduces cross-topic contamination and makes their provenance visible.
+For the controlled benchmark, each specialist receives all 12 cases and 13 findings in one batched request. The benchmark makes four specialist requests total - one for revenue, one for cash flow, one for related parties, and one for language. Isolation is by analytical scope, not by case; it does not make one specialist request per case. Each scope uses its own versioned prompt and returns schema-validated JSON, which keeps provenance visible while limiting cross-topic contamination.
 
 The fictional demo uses a deterministic local adapter instead of an external model, so it runs without API keys and always produces reproducible results.
 

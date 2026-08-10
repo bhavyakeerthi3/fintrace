@@ -789,7 +789,7 @@
   "live_run": {
     "model": "llama-3.3-70b-versatile",
     "temperature": 0.0,
-    "run_timestamp": "2026-08-10T07:40:53.217587+00:00",
+    "run_timestamp": "2026-08-10T07:47:47.826105+00:00",
     "metrics": {
       "finding_count": 13,
       "correct_classifications": 13,
@@ -864,7 +864,7 @@
             "explanation_quote": "",
             "citation_valid": null,
             "model_decision": "unresolved",
-            "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of organic growth.",
+            "model_reasoning": "No direct evidence in the filing to explain the difference between claimed and computed organic growth.",
             "transition": "unresolved",
             "specialist_sources": [
               "revenue",
@@ -965,8 +965,7 @@
             "specialist_sources": [
               "revenue",
               "cash_flow",
-              "related_party",
-              "language"
+              "related_party"
             ]
           }
         ],
@@ -1106,12 +1105,10 @@
             "explanation_quote": "",
             "citation_valid": null,
             "model_decision": "unresolved",
-            "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of revenue.",
+            "model_reasoning": "The provided passage does not directly relate to the claim about revenue.",
             "transition": "unresolved",
             "specialist_sources": [
               "revenue",
-              "cash_flow",
-              "related_party",
               "language"
             ]
           }
@@ -1135,11 +1132,9 @@
             "explanation_quote": "",
             "citation_valid": null,
             "model_decision": "unresolved",
-            "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of revenue increase.",
+            "model_reasoning": "The passage provided is too generic and does not directly address the claim about revenue increase.",
             "transition": "unresolved",
-            "specialist_sources": [
-              "cash_flow"
-            ]
+            "specialist_sources": []
           }
         ],
         "expected_result": [
@@ -1161,7 +1156,7 @@
             "explanation_quote": "",
             "citation_valid": null,
             "model_decision": "unresolved",
-            "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of adjusted profit.",
+            "model_reasoning": "The passage does not provide a clear explanation for the difference in adjusted profit.",
             "transition": "unresolved",
             "specialist_sources": [
               "revenue",
@@ -1196,8 +1191,7 @@
             "specialist_sources": [
               "revenue",
               "cash_flow",
-              "related_party",
-              "language"
+              "related_party"
             ]
           },
           {
@@ -1207,7 +1201,7 @@
             "explanation_quote": "",
             "citation_valid": null,
             "model_decision": "unresolved",
-            "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of adjusted free cash flow.",
+            "model_reasoning": "The provided evidence does not directly explain the difference in adjusted free cash flow.",
             "transition": "unresolved",
             "specialist_sources": [
               "revenue",

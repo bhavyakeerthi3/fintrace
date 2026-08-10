@@ -7,6 +7,7 @@ import json
 import sys
 from pathlib import Path
 
+import pdfplumber
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import letter
@@ -214,13 +215,54 @@ def write_pdf(bundle: dict) -> None:
     doc.build(story, onFirstPage=footer, onLaterPages=footer)
 
 
+def verify_artifacts(bundle: dict) -> dict[str, int | str]:
+    """Read generated artifacts back and fail on any drift from the result JSON."""
+    html_document = (OUTPUTS / "fintrace-samples.html").read_text(encoding="utf-8")
+    with pdfplumber.open(OUTPUTS / "fintrace-samples.pdf") as pdf:
+        pdf_text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+        page_count = len(pdf.pages)
+
+    reference = bundle["deterministic_reference"]["ablations"]["full_fintrace"]
+    live = bundle["live_run"]
+    for label, run in (("Deterministic reference", reference), (f"Live model: {live['model']}", live)):
+        metrics = run["metrics"]
+        expected_html = (
+            f"<td>{html.escape(label)}</td><td>{metrics['correct_classifications']}/{metrics['finding_count']}</td>"
+            f"<td>{metrics['classification_accuracy']}%</td><td>{metrics['false_positives']} ({metrics['false_positive_rate']}%)</td>"
+            f"<td>{metrics['unsupported_explanations']} ({metrics['unsupported_explanation_rate']}%)</td>"
+            f"<td>{metrics['correct_numeric_checks']}/{metrics['numeric_checks']} ({metrics['numerical_reconciliation_accuracy']}%)</td>"
+        )
+        if expected_html not in html_document:
+            raise ValueError(f"HTML metrics do not match benchmark JSON for {label}")
+        if f"{metrics['correct_classifications']} / {metrics['finding_count']} correct" not in pdf_text:
+            raise ValueError(f"PDF correct count does not match benchmark JSON for {label}")
+        if f"{metrics['classification_accuracy']}% classification accuracy" not in pdf_text:
+            raise ValueError(f"PDF classification accuracy does not match benchmark JSON for {label}")
+
+    for run_name, run in (("deterministic_reference", reference), ("live_run", live)):
+        for item in run["outputs"]:
+            expected_verdict = f"{item['finding_id']}: {item['classification'].upper()}"
+            if expected_verdict not in html_document:
+                raise ValueError(f"HTML is missing {run_name} verdict: {expected_verdict}")
+            if expected_verdict not in pdf_text:
+                raise ValueError(f"PDF is missing {run_name} verdict: {expected_verdict}")
+
+    expected_cases = int(bundle["case_count"])
+    if html_document.count("DETERMINISTIC REFERENCE") < expected_cases or html_document.count("LIVE MODEL") < expected_cases:
+        raise ValueError("HTML does not show both runs for every case")
+    if pdf_text.count("DETERMINISTIC REFERENCE") < expected_cases or pdf_text.count(f"LIVE: {live['model']}") < expected_cases:
+        raise ValueError("PDF does not show both runs for every case")
+    return {"status": "passed", "cases_checked": expected_cases, "pdf_pages": page_count}
+
+
 def main() -> None:
     OUTPUTS.mkdir(parents=True, exist_ok=True)
     bundle = _load_validated_bundle(OUTPUTS / "fintrace-benchmark-results.json")
     write_ui_data(bundle)
     write_html(bundle)
     write_pdf(bundle)
-    print(json.dumps({"cases": bundle["case_count"], "findings": bundle["finding_count"], "integrity": bundle["integrity_checks"], "outputs": ["fintrace-samples.html", "fintrace-samples.pdf"]}, indent=2))
+    artifact_verification = verify_artifacts(bundle)
+    print(json.dumps({"cases": bundle["case_count"], "findings": bundle["finding_count"], "integrity": bundle["integrity_checks"], "artifact_verification": artifact_verification, "outputs": ["fintrace-samples.html", "fintrace-samples.pdf"]}, indent=2))
 
 
 if __name__ == "__main__":

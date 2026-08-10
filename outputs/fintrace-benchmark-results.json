@@ -3,7 +3,7 @@
   "suite_version": "1.0.0",
   "case_count": 12,
   "finding_count": 13,
-  "generated_at": "2026-08-10T07:41:54.116909+00:00",
+  "generated_at": "2026-08-10T07:49:18.072153+00:00",
   "deterministic_reference": {
     "suite_version": "1.0.0",
     "provider": "local-deterministic",
@@ -1179,7 +1179,7 @@
     "model": "llama-3.3-70b-versatile",
     "temperature": 0.0,
     "token_limit": 1800,
-    "run_timestamp": "2026-08-10T07:40:53.217587+00:00",
+    "run_timestamp": "2026-08-10T07:47:47.826105+00:00",
     "prompt_versions": {
       "revenue": "1.0.0",
       "cash_flow": "1.0.0",
@@ -1258,7 +1258,7 @@
         "explanation_quote": "",
         "citation_valid": null,
         "model_decision": "unresolved",
-        "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of organic growth.",
+        "model_reasoning": "No direct evidence in the filing to explain the difference between claimed and computed organic growth.",
         "transition": "unresolved",
         "specialist_sources": [
           "revenue",
@@ -1320,8 +1320,7 @@
         "specialist_sources": [
           "revenue",
           "cash_flow",
-          "related_party",
-          "language"
+          "related_party"
         ]
       },
       {
@@ -1396,12 +1395,10 @@
         "explanation_quote": "",
         "citation_valid": null,
         "model_decision": "unresolved",
-        "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of revenue.",
+        "model_reasoning": "The provided passage does not directly relate to the claim about revenue.",
         "transition": "unresolved",
         "specialist_sources": [
           "revenue",
-          "cash_flow",
-          "related_party",
           "language"
         ]
       },
@@ -1412,11 +1409,9 @@
         "explanation_quote": "",
         "citation_valid": null,
         "model_decision": "unresolved",
-        "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of revenue increase.",
+        "model_reasoning": "The passage provided is too generic and does not directly address the claim about revenue increase.",
         "transition": "unresolved",
-        "specialist_sources": [
-          "cash_flow"
-        ]
+        "specialist_sources": []
       },
       {
         "finding_id": "B11-F1",
@@ -1425,7 +1420,7 @@
         "explanation_quote": "",
         "citation_valid": null,
         "model_decision": "unresolved",
-        "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of adjusted profit.",
+        "model_reasoning": "The passage does not provide a clear explanation for the difference in adjusted profit.",
         "transition": "unresolved",
         "specialist_sources": [
           "revenue",
@@ -1447,8 +1442,7 @@
         "specialist_sources": [
           "revenue",
           "cash_flow",
-          "related_party",
-          "language"
+          "related_party"
         ]
       },
       {
@@ -1458,7 +1452,7 @@
         "explanation_quote": "",
         "citation_valid": null,
         "model_decision": "unresolved",
-        "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of adjusted free cash flow.",
+        "model_reasoning": "The provided evidence does not directly explain the difference in adjusted free cash flow.",
         "transition": "unresolved",
         "specialist_sources": [
           "revenue",
@@ -1479,7 +1473,7 @@
             "explanation_quote": "",
             "citation_valid": null,
             "model_decision": "unresolved",
-            "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of organic growth.",
+            "model_reasoning": "No direct evidence in the filing to explain the difference between claimed and computed organic growth.",
             "transition": "unresolved",
             "specialist_sources": [
               "revenue",
@@ -1580,8 +1574,7 @@
             "specialist_sources": [
               "revenue",
               "cash_flow",
-              "related_party",
-              "language"
+              "related_party"
             ]
           }
         ],
@@ -1721,12 +1714,10 @@
             "explanation_quote": "",
             "citation_valid": null,
             "model_decision": "unresolved",
-            "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of revenue.",
+            "model_reasoning": "The provided passage does not directly relate to the claim about revenue.",
             "transition": "unresolved",
             "specialist_sources": [
               "revenue",
-              "cash_flow",
-              "related_party",
               "language"
             ]
           }
@@ -1750,11 +1741,9 @@
             "explanation_quote": "",
             "citation_valid": null,
             "model_decision": "unresolved",
-            "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of revenue increase.",
+            "model_reasoning": "The passage provided is too generic and does not directly address the claim about revenue increase.",
             "transition": "unresolved",
-            "specialist_sources": [
-              "cash_flow"
-            ]
+            "specialist_sources": []
           }
         ],
         "expected_result": [
@@ -1776,7 +1765,7 @@
             "explanation_quote": "",
             "citation_valid": null,
             "model_decision": "unresolved",
-            "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of adjusted profit.",
+            "model_reasoning": "The passage does not provide a clear explanation for the difference in adjusted profit.",
             "transition": "unresolved",
             "specialist_sources": [
               "revenue",
@@ -1811,8 +1800,7 @@
             "specialist_sources": [
               "revenue",
               "cash_flow",
-              "related_party",
-              "language"
+              "related_party"
             ]
           },
           {
@@ -1822,7 +1810,7 @@
             "explanation_quote": "",
             "citation_valid": null,
             "model_decision": "unresolved",
-            "model_reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of adjusted free cash flow.",
+            "model_reasoning": "The provided evidence does not directly explain the difference in adjusted free cash flow.",
             "transition": "unresolved",
             "specialist_sources": [
               "revenue",
@@ -1860,7 +1848,7 @@
           "filed_data_reference": "MD&A p. 24",
           "inconsistency": "Claimed constant-currency revenue ($105M) does not match computed value ($100M)",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed constant-currency revenue may indicate an error in the foreign-exchange translation effect or other factors affecting revenue."
+          "rationale": "The claimed constant-currency revenue is higher than the computed value, which may indicate an error in the foreign-exchange translation effect."
         },
         {
           "finding_id": "B03-F1",
@@ -1868,7 +1856,7 @@
           "filed_data_reference": "Acquisition note p. 29",
           "inconsistency": "Claimed combined revenue ($120M) does not match computed value ($100M)",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed combined revenue may indicate an error in the reporting of acquisition contributions or other factors affecting revenue."
+          "rationale": "The claimed combined revenue is higher than the computed value, which may indicate an error in the acquisition revenue contribution."
         },
         {
           "finding_id": "B04-F1",
@@ -1876,7 +1864,7 @@
           "filed_data_reference": "Dispositions p. 31",
           "inconsistency": "Claimed continuing-business revenue ($90M) does not match computed value ($100M)",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed continuing-business revenue may indicate an error in the reporting of divestiture effects or other factors affecting revenue."
+          "rationale": "The claimed continuing-business revenue is lower than the computed value, which may indicate an error in the divestiture revenue exclusion."
         },
         {
           "finding_id": "B05-F1",
@@ -1884,15 +1872,15 @@
           "filed_data_reference": "Segment note p. 33",
           "inconsistency": "Claimed mobility segment revenue ($70M) does not match computed value ($60M)",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed mobility segment revenue may indicate an error in the reporting of segment reclassifications or other factors affecting revenue."
+          "rationale": "The claimed mobility segment revenue is higher than the computed value, which may indicate an error in the segment reclassification."
         },
         {
           "finding_id": "B06-F1",
           "claim_quote": "Revenue under the revised policy was 55 million dollars.",
           "filed_data_reference": "Policy note p. 41",
           "inconsistency": "Claimed revenue under revised policy ($55M) does not match computed value ($50M)",
-          "severity": "low",
-          "rationale": "The difference between the claimed and computed revenue under the revised policy may indicate a minor error in the reporting of policy changes or other factors affecting revenue."
+          "severity": "medium",
+          "rationale": "The claimed revenue under the revised policy is higher than the computed value, which may indicate an error in the policy change revenue impact."
         },
         {
           "finding_id": "B07-F1",
@@ -1900,23 +1888,23 @@
           "filed_data_reference": "Non-GAAP reconciliation p. 31",
           "inconsistency": "Claimed adjusted free cash flow ($85M) does not match computed value ($62M)",
           "severity": "high",
-          "rationale": "The significant difference between the claimed and computed adjusted free cash flow may indicate a major error in the reporting of one-time adjustments or other factors affecting cash flow."
+          "rationale": "The claimed adjusted free cash flow is significantly higher than the computed value, which may indicate an error in the one-time adjustment or cash restructuring payments."
         },
         {
           "finding_id": "B09-F1",
           "claim_quote": "Revenue was 130 million dollars.",
           "filed_data_reference": "Debt note p. 44",
-          "inconsistency": "Claimed revenue ($130M) does not match computed value ($100M), and the filing passage is irrelevant to the claim",
-          "severity": "critical",
-          "rationale": "The claimed revenue is significantly higher than the computed value, and the filing passage does not provide relevant information to support the claim, indicating a potential major error or misleading statement."
+          "inconsistency": "Claimed revenue ($130M) does not match computed value ($100M) and is not relevant to debt note",
+          "severity": "low",
+          "rationale": "The claimed revenue is higher than the computed value and is mentioned in a debt note, which may indicate an error in the revenue reporting or an irrelevant disclosure."
         },
         {
           "finding_id": "B11-F1",
           "claim_quote": "Adjusted profit was 110 million dollars.",
           "filed_data_reference": "Adjustments p. 37",
-          "inconsistency": "Claimed adjusted profit ($110M) does not match computed value ($100M), and the filing passage does not provide relevant information to support the claim",
-          "severity": "critical",
-          "rationale": "The claimed adjusted profit is higher than the computed value, and the filing passage does not provide relevant information to support the claim, indicating a potential major error or misleading statement."
+          "inconsistency": "Claimed adjusted profit ($110M) does not match computed value ($100M) and lacks clear explanation",
+          "severity": "medium",
+          "rationale": "The claimed adjusted profit is higher than the computed value and lacks a clear explanation, which may indicate an error in the presentation adjustments or an invalid quote."
         },
         {
           "finding_id": "B12-F1",
@@ -1924,7 +1912,7 @@
           "filed_data_reference": "Non-GAAP table p. 39",
           "inconsistency": "Claimed adjusted EBITDA ($48M) does not match computed value ($40M)",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed adjusted EBITDA may indicate an error in the reporting of non-GAAP adjustments or other factors affecting EBITDA."
+          "rationale": "The claimed adjusted EBITDA is higher than the computed value, which may indicate an error in the restructuring expense or cash payments."
         },
         {
           "finding_id": "B12-F2",
@@ -1932,7 +1920,7 @@
           "filed_data_reference": "Non-GAAP table p. 39",
           "inconsistency": "Claimed adjusted free cash flow ($45M) does not match computed value ($40M)",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed adjusted free cash flow may indicate an error in the reporting of non-GAAP adjustments or other factors affecting cash flow."
+          "rationale": "The claimed adjusted free cash flow is higher than the computed value, which may indicate an error in the restructuring expense or cash payments."
         }
       ],
       "cash_flow": [
@@ -1942,7 +1930,7 @@
           "filed_data_reference": "Segment note p. 18",
           "gap_description": "Claimed organic growth of 23% differs from computed value of 12.73%",
           "severity": "high",
-          "rationale": "The difference between the claimed and computed organic growth rates exceeds the specified tolerance."
+          "rationale": "The difference between the claimed and computed organic growth rates indicates a potential issue with the company's growth reporting."
         },
         {
           "finding_id": "B02-F1",
@@ -1950,7 +1938,7 @@
           "filed_data_reference": "MD&A p. 24",
           "gap_description": "Claimed constant-currency revenue of $105M differs from computed value of $100M",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed constant-currency revenue exceeds the specified tolerance."
+          "rationale": "The difference between the claimed and computed constant-currency revenue may be due to foreign-exchange translation effects."
         },
         {
           "finding_id": "B03-F1",
@@ -1958,7 +1946,7 @@
           "filed_data_reference": "Acquisition note p. 29",
           "gap_description": "Claimed combined revenue of $120M differs from computed value of $100M",
           "severity": "high",
-          "rationale": "The difference between the claimed and computed combined revenue exceeds the specified tolerance."
+          "rationale": "The difference between the claimed and computed combined revenue may be due to the acquisition of the Atlas business."
         },
         {
           "finding_id": "B04-F1",
@@ -1966,7 +1954,7 @@
           "filed_data_reference": "Dispositions p. 31",
           "gap_description": "Claimed continuing-business revenue of $90M differs from computed value of $100M",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed continuing-business revenue exceeds the specified tolerance."
+          "rationale": "The difference between the claimed and computed continuing-business revenue may be due to the exclusion of the divested Delta unit."
         },
         {
           "finding_id": "B05-F1",
@@ -1974,7 +1962,7 @@
           "filed_data_reference": "Segment note p. 33",
           "gap_description": "Claimed mobility segment revenue of $70M differs from computed value of $60M",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed mobility segment revenue exceeds the specified tolerance."
+          "rationale": "The difference between the claimed and computed mobility segment revenue may be due to the reclassification of platform revenue."
         },
         {
           "finding_id": "B06-F1",
@@ -1982,7 +1970,7 @@
           "filed_data_reference": "Policy note p. 41",
           "gap_description": "Claimed revenue under revised policy of $55M differs from computed value of $50M",
           "severity": "low",
-          "rationale": "The difference between the claimed and computed revenue under the revised policy exceeds the specified tolerance."
+          "rationale": "The difference between the claimed and computed revenue under the revised policy may be due to the adoption of the revised contract policy."
         },
         {
           "finding_id": "B07-F1",
@@ -1990,23 +1978,7 @@
           "filed_data_reference": "Non-GAAP reconciliation p. 31",
           "gap_description": "Claimed adjusted free cash flow of $85M differs from computed value of $62M",
           "severity": "high",
-          "rationale": "The difference between the claimed and computed adjusted free cash flow exceeds the specified tolerance."
-        },
-        {
-          "finding_id": "B09-F1",
-          "claim_quote": "Revenue was 130 million dollars.",
-          "filed_data_reference": "Debt note p. 44",
-          "gap_description": "Claimed revenue of $130M differs from computed value of $100M",
-          "severity": "high",
-          "rationale": "The difference between the claimed and computed revenue exceeds the specified tolerance."
-        },
-        {
-          "finding_id": "B10-F1",
-          "claim_quote": "Revenue increased to 115 million dollars.",
-          "filed_data_reference": "Risk factors p. 52",
-          "gap_description": "Claimed revenue of $115M differs from computed value of $100M",
-          "severity": "medium",
-          "rationale": "The difference between the claimed and computed revenue exceeds the specified tolerance."
+          "rationale": "The difference between the claimed and computed adjusted free cash flow may be due to the addition of cash restructuring payments."
         },
         {
           "finding_id": "B12-F1",
@@ -2014,7 +1986,7 @@
           "filed_data_reference": "Non-GAAP table p. 39",
           "gap_description": "Claimed adjusted EBITDA of $48M differs from computed value of $40M",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed adjusted EBITDA exceeds the specified tolerance."
+          "rationale": "The difference between the claimed and computed adjusted EBITDA may be due to the addition of restructuring expense."
         },
         {
           "finding_id": "B12-F2",
@@ -2022,7 +1994,7 @@
           "filed_data_reference": "Non-GAAP table p. 39",
           "gap_description": "Claimed adjusted free cash flow of $45M differs from computed value of $40M",
           "severity": "medium",
-          "rationale": "The difference between the claimed and computed adjusted free cash flow exceeds the specified tolerance."
+          "rationale": "The difference between the claimed and computed adjusted free cash flow may be due to the addition of cash payments related to restructuring."
         }
       ],
       "related_party": [
@@ -2032,7 +2004,7 @@
           "footnote_reference": "Segment note p. 18",
           "concern": "Organic growth discrepancy",
           "severity": "high",
-          "rationale": "Claimed organic growth of 23 percent differs from computed value of 12.73 percent, exceeding the specified tolerance of 0.5 percentage points."
+          "rationale": "Claimed organic growth of 23 percent differs from computed value of 12.73 percent, with a difference exceeding the specified tolerance of 0.5 percentage points."
         },
         {
           "finding_id": "B02-F1",
@@ -2083,14 +2055,6 @@
           "rationale": "Claimed adjusted free cash flow of 85 million dollars differs from computed value of 62 million dollars, indicating a potential discrepancy in one-time adjustment."
         },
         {
-          "finding_id": "B09-F1",
-          "claim_quote": "Revenue was 130 million dollars.",
-          "footnote_reference": "Debt note p. 44",
-          "concern": "Irrelevant disclosure",
-          "severity": "low",
-          "rationale": "Claimed revenue of 130 million dollars is not supported by the referenced footnote, which discusses a revolving credit facility."
-        },
-        {
           "finding_id": "B12-F1",
           "claim_quote": "Adjusted EBITDA was 48 million dollars.",
           "footnote_reference": "Non-GAAP table p. 39",
@@ -2121,64 +2085,46 @@
           "finding_id": "B02-F1",
           "quote": "Constant-currency revenue was 105 million dollars.",
           "topic": "Constant-currency revenue",
-          "pattern": "Terminology change",
-          "baseline_comparison": "Normal communication typically uses consistent terminology",
+          "pattern": "Indirect answer",
+          "baseline_comparison": "Normal communication typically provides direct answers to questions about revenue",
           "severity": "medium",
-          "rationale": "The speaker's use of 'constant-currency revenue' may indicate a change in terminology, which is not typical in normal communication."
+          "rationale": "The speaker's claim of constant-currency revenue being 105 million dollars may be an indirect answer, as it does not directly address the question of actual revenue."
         },
         {
           "finding_id": "B03-F1",
           "quote": "Combined revenue reached 120 million dollars.",
           "topic": "Combined revenue",
-          "pattern": "Passive construction",
-          "baseline_comparison": "Normal communication typically uses active voice",
+          "pattern": "Terminology change",
+          "baseline_comparison": "Normal communication typically uses consistent terminology when discussing revenue",
           "severity": "low",
-          "rationale": "The speaker's use of 'combined revenue reached' is a passive construction, which is not typical in normal communication."
-        },
-        {
-          "finding_id": "B04-F1",
-          "quote": "Continuing-business revenue was 90 million dollars.",
-          "topic": "Continuing-business revenue",
-          "pattern": "Deflection",
-          "baseline_comparison": "Normal communication typically provides direct answers",
-          "severity": "medium",
-          "rationale": "The speaker's claim of 90 million dollars in continuing-business revenue may be deflecting from the actual issue, which is not typical in normal communication."
+          "rationale": "The speaker's use of 'combined revenue' may indicate a change in terminology, which could be a minor issue in communication."
         },
         {
           "finding_id": "B07-F1",
           "quote": "Adjusted free cash flow was 85 million dollars.",
           "topic": "Adjusted free cash flow",
-          "pattern": "Missing numerical answer",
-          "baseline_comparison": "Normal communication typically provides numerical answers",
-          "severity": "high",
-          "rationale": "The speaker's claim of 85 million dollars in adjusted free cash flow is not supported by a clear numerical answer, which is not typical in normal communication."
+          "pattern": "Passive construction",
+          "baseline_comparison": "Normal communication typically uses active voice when discussing financial metrics",
+          "severity": "medium",
+          "rationale": "The speaker's use of passive voice when discussing adjusted free cash flow may indicate a lack of clarity or transparency in communication."
         },
         {
           "finding_id": "B09-F1",
           "quote": "Revenue was 130 million dollars.",
           "topic": "Revenue",
-          "pattern": "Indirect answer",
-          "baseline_comparison": "Normal communication typically provides direct answers",
-          "severity": "medium",
-          "rationale": "The speaker's claim of 130 million dollars in revenue is an indirect answer, which is not typical in normal communication."
+          "pattern": "Repeated deflection",
+          "baseline_comparison": "Normal communication typically provides direct and clear answers to questions about revenue",
+          "severity": "high",
+          "rationale": "The speaker's claim of revenue being 130 million dollars may be a deflection, as it does not directly address the question of actual revenue and is not supported by the provided text."
         },
         {
           "finding_id": "B11-F1",
           "quote": "Adjusted profit was 110 million dollars.",
           "topic": "Adjusted profit",
-          "pattern": "Qualifier",
-          "baseline_comparison": "Normal communication typically does not include unexplained adjustments",
-          "severity": "high",
-          "rationale": "The speaker's claim of 110 million dollars in adjusted profit is not explained, which is unusual in normal communication."
-        },
-        {
-          "finding_id": "B12-F1",
-          "quote": "Adjusted EBITDA was 48 million dollars.",
-          "topic": "Adjusted EBITDA",
-          "pattern": "Terminology change",
-          "baseline_comparison": "Normal communication typically uses consistent terminology",
-          "severity": "medium",
-          "rationale": "The speaker's use of 'adjusted EBITDA' may indicate a change in terminology, which is not typical in normal communication."
+          "pattern": "Missing numerical answer",
+          "baseline_comparison": "Normal communication typically provides numerical answers to questions about financial metrics",
+          "severity": "critical",
+          "rationale": "The speaker's claim of adjusted profit being 110 million dollars is not supported by the provided text and may indicate a lack of transparency or clarity in communication."
         }
       ]
     },
@@ -2216,23 +2162,23 @@
       "unresolved": [
         {
           "finding_id": "B01-F1",
-          "reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of organic growth."
+          "reasoning": "No direct evidence in the filing to explain the difference between claimed and computed organic growth."
         },
         {
           "finding_id": "B09-F1",
-          "reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of revenue."
+          "reasoning": "The provided passage does not directly relate to the claim about revenue."
         },
         {
           "finding_id": "B10-F1",
-          "reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of revenue increase."
+          "reasoning": "The passage provided is too generic and does not directly address the claim about revenue increase."
         },
         {
           "finding_id": "B11-F1",
-          "reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of adjusted profit."
+          "reasoning": "The passage does not provide a clear explanation for the difference in adjusted profit."
         },
         {
           "finding_id": "B12-F2",
-          "reasoning": "The provided evidence does not directly explain the difference between the claimed and computed values of adjusted free cash flow."
+          "reasoning": "The provided evidence does not directly explain the difference in adjusted free cash flow."
         }
       ]
     },
@@ -2248,7 +2194,7 @@
           "prompt_version": "1.0.0",
           "temperature": 0.0,
           "token_limit": 1800,
-          "executed_at": "2026-08-10T07:40:56.125992+00:00"
+          "executed_at": "2026-08-10T07:47:55.541394+00:00"
         },
         {
           "stage": "cash_flow",
@@ -2256,7 +2202,7 @@
           "prompt_version": "1.0.0",
           "temperature": 0.0,
           "token_limit": 1800,
-          "executed_at": "2026-08-10T07:40:58.217245+00:00"
+          "executed_at": "2026-08-10T07:48:19.591657+00:00"
         },
         {
           "stage": "related_party",
@@ -2264,7 +2210,7 @@
           "prompt_version": "1.0.0",
           "temperature": 0.0,
           "token_limit": 1800,
-          "executed_at": "2026-08-10T07:41:13.124139+00:00"
+          "executed_at": "2026-08-10T07:48:40.692014+00:00"
         },
         {
           "stage": "language",
@@ -2272,7 +2218,7 @@
           "prompt_version": "1.0.0",
           "temperature": 0.0,
           "token_limit": 1800,
-          "executed_at": "2026-08-10T07:41:35.319426+00:00"
+          "executed_at": "2026-08-10T07:48:59.904492+00:00"
         },
         {
           "stage": "second_pass",
@@ -2280,30 +2226,58 @@
           "prompt_version": "1.0.0",
           "temperature": 0.0,
           "token_limit": 1800,
-          "executed_at": "2026-08-10T07:41:54.115909+00:00"
+          "executed_at": "2026-08-10T07:49:18.070701+00:00"
         }
       ],
       "retry_events": [
         {
+          "stage": "revenue",
+          "attempt": 1,
+          "http_status": 429,
+          "delay_seconds": 5.025,
+          "recorded_at": "2026-08-10T07:47:48.083201+00:00"
+        },
+        {
+          "stage": "cash_flow",
+          "attempt": 1,
+          "http_status": 429,
+          "delay_seconds": 19.035,
+          "recorded_at": "2026-08-10T07:47:55.702300+00:00"
+        },
+        {
+          "stage": "cash_flow",
+          "attempt": 2,
+          "http_status": 429,
+          "delay_seconds": 2.65,
+          "recorded_at": "2026-08-10T07:48:14.932727+00:00"
+        },
+        {
           "stage": "related_party",
           "attempt": 1,
           "http_status": 429,
-          "delay_seconds": 12.445,
-          "recorded_at": "2026-08-10T07:40:58.439529+00:00"
+          "delay_seconds": 15.295,
+          "recorded_at": "2026-08-10T07:48:19.799179+00:00"
+        },
+        {
+          "stage": "related_party",
+          "attempt": 2,
+          "http_status": 429,
+          "delay_seconds": 3.275,
+          "recorded_at": "2026-08-10T07:48:35.324970+00:00"
         },
         {
           "stage": "language",
           "attempt": 1,
           "http_status": 429,
-          "delay_seconds": 19.875,
-          "recorded_at": "2026-08-10T07:41:13.336468+00:00"
+          "delay_seconds": 17.11,
+          "recorded_at": "2026-08-10T07:48:40.875276+00:00"
         },
         {
           "stage": "second_pass",
           "attempt": 1,
           "http_status": 429,
-          "delay_seconds": 17.22,
-          "recorded_at": "2026-08-10T07:41:35.505585+00:00"
+          "delay_seconds": 16.575,
+          "recorded_at": "2026-08-10T07:49:00.054906+00:00"
         }
       ]
     }
