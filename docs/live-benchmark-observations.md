@@ -10,6 +10,8 @@ The second pass is one additional batched request. It contains all 12 cases as f
 
 ## Observed behavior: B09-F1
 
+This is a relevance-gate observation, not a live single-prompt failure: the genuine single-prompt baseline also left B09-F1 unresolved and rejected the unrelated debt note.
+
 For the irrelevant-disclosure trap, the language specialist returned this raw finding:
 
 ```json
