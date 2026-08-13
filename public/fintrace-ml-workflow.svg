@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1400" viewBox="0 0 2200 1400" role="img" aria-labelledby="title desc">
+  <title id="title">FinTrace ML workflow</title>
+  <desc id="desc">Four specialist LLM calls and one second-pass LLM call, with deterministic aggregation, calculation, retrieval, quote validation, and human review.</desc>
+  <defs>
+    <style>
+      .title{font:700 54px Arial,sans-serif;fill:#172527}.sub{font:22px Arial,sans-serif;fill:#687274}.num{font:700 18px Arial,sans-serif}.head{font:700 25px Arial,sans-serif;fill:#172527}.body{font:17px Arial,sans-serif;fill:#687274}.tag{font:700 15px Arial,sans-serif}.foot{font:700 19px Arial,sans-serif;fill:#172527}.box{fill:#fffdf8;stroke:#d9d5cb;stroke-width:2}.arrow{stroke:#9d373b;stroke-width:6;fill:none;marker-end:url(#arrow)}
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9d373b"/></marker>
+  </defs>
+  <rect width="2200" height="1400" fill="#f4f0e8"/>
+  <text x="85" y="95" class="title">FinTrace ML Workflow</text>
+  <text x="85" y="138" class="sub">Five active LLM calls. Deterministic code calculates, aggregates, retrieves, and validates. A human decides.</text>
+  <rect x="1680" y="58" width="420" height="82" rx="18" fill="#ebe7dd" stroke="#d9d5cb" stroke-width="2"/>
+  <text x="1722" y="108" class="tag" fill="#9d373b">CONTROLLED FICTIONAL DEMO</text>
+
+  <g transform="translate(85 220)">
+    <rect class="box" width="360" height="420" rx="18"/><rect width="360" height="12" fill="#172527"/>
+    <text x="26" y="48" class="num" fill="#172527">01</text><text x="26" y="94" class="head">Ingest &amp; Align</text>
+    <text x="26" y="142" class="tag" fill="#2f6b55">DETERMINISTIC PYTHON</text>
+    <text x="26" y="185" class="body">Input: transcript + filing</text><text x="26" y="218" class="body">Maps claims, periods, metrics,</text><text x="26" y="251" class="body">and filing references</text><text x="26" y="302" class="body">Output: aligned source package</text>
+  </g>
+  <path class="arrow" d="M455 430 H500"/>
+  <g transform="translate(515 220)">
+    <rect class="box" width="360" height="420" rx="18"/><rect width="360" height="12" fill="#2f6380"/>
+    <text x="26" y="48" class="num" fill="#2f6380">02</text><text x="26" y="94" class="head">4 Specialist Calls</text>
+    <text x="26" y="142" class="tag" fill="#2f6380">ACTIVE LLM CALLS</text>
+    <text x="26" y="185" class="body">Revenue / cash flow /</text><text x="26" y="218" class="body">related party / language</text><text x="26" y="261" class="body">Live: llama-3.3-70b-versatile</text><text x="26" y="294" class="body">Temperature: 0</text><text x="26" y="345" class="body">Output: scoped candidates</text>
+  </g>
+  <path class="arrow" d="M885 430 H930"/>
+  <g transform="translate(945 220)">
+    <rect class="box" width="360" height="420" rx="18"/><rect width="360" height="12" fill="#2f6b55"/>
+    <text x="26" y="48" class="num" fill="#2f6b55">03</text><text x="26" y="94" class="head">Aggregate &amp; Dedupe</text>
+    <text x="26" y="142" class="tag" fill="#2f6b55">NOT AN LLM CALL</text>
+    <text x="26" y="185" class="body">Adapter: aggregate_findings</text><text x="26" y="218" class="body">Preserves scope provenance</text><text x="26" y="251" class="body">and assigns stable IDs</text><text x="26" y="302" class="body">aggregator_v1 is a contract</text><text x="26" y="335" class="body">defined but not wired</text>
+  </g>
+  <path class="arrow" d="M1315 430 H1360"/>
+  <g transform="translate(1375 220)">
+    <rect class="box" width="360" height="420" rx="18"/><rect width="360" height="12" fill="#2f6b55"/>
+    <text x="26" y="48" class="num" fill="#2f6b55">04</text><text x="26" y="94" class="head">Code Calculation</text>
+    <text x="26" y="142" class="tag" fill="#2f6b55">AUTHORITATIVE PYTHON</text>
+    <text x="26" y="185" class="body">Growth / FCF / margin /</text><text x="26" y="218" class="body">direct-value formulas</text><text x="26" y="261" class="body">Output: computed value, gap,</text><text x="26" y="294" class="body">tolerance, and references</text>
+  </g>
+  <path class="arrow" d="M1745 430 H1790"/>
+  <g transform="translate(1805 220)">
+    <rect class="box" width="310" height="420" rx="18"/><rect width="310" height="12" fill="#2f6b55"/>
+    <text x="26" y="48" class="num" fill="#2f6b55">05</text><text x="26" y="94" class="head">Filing Retrieval</text>
+    <text x="26" y="142" class="tag" fill="#2f6b55">DETERMINISTIC PYTHON</text>
+    <text x="26" y="185" class="body">Ranks filing passages</text><text x="26" y="218" class="body">and claim-linked disclosures</text><text x="26" y="269" class="body">Output: citable evidence</text>
+  </g>
+
+  <path class="arrow" d="M1960 655 V710 H265 V755"/>
+  <g transform="translate(85 770)">
+    <rect class="box" width="420" height="420" rx="18"/><rect width="420" height="12" fill="#2f6380"/>
+    <text x="26" y="48" class="num" fill="#2f6380">06</text><text x="26" y="94" class="head">Second-Pass Review</text>
+    <text x="26" y="142" class="tag" fill="#2f6380">ACTIVE LLM CALL #5</text>
+    <text x="26" y="185" class="body">Input: findings + code values +</text><text x="26" y="218" class="body">evidence + complete filing</text><text x="26" y="261" class="body">Live: llama-3.3-70b-versatile</text><text x="26" y="294" class="body">Output: proposed explained</text><text x="26" y="327" class="body">or unresolved decision</text>
+  </g>
+  <path class="arrow" d="M515 980 H580"/>
+  <g transform="translate(595 770)">
+    <rect class="box" width="420" height="420" rx="18"/><rect width="420" height="12" fill="#2f6b55"/>
+    <text x="26" y="48" class="num" fill="#2f6b55">07</text><text x="26" y="94" class="head">Quote + Relation Gate</text>
+    <text x="26" y="142" class="tag" fill="#2f6b55">DETERMINISTIC PYTHON</text>
+    <text x="26" y="185" class="body">Exact quote present?</text><text x="26" y="218" class="body">Directly related?</text><text x="26" y="251" class="body">Numerically reconciled?</text><text x="26" y="302" class="body">Any failure -&gt; UNRESOLVED</text>
+  </g>
+  <path class="arrow" d="M1025 980 H1090"/>
+  <g transform="translate(1105 770)">
+    <rect class="box" width="420" height="420" rx="18"/><rect width="420" height="12" fill="#172527"/>
+    <text x="26" y="48" class="num" fill="#172527">08</text><text x="26" y="94" class="head">Analyst Review</text>
+    <text x="26" y="142" class="tag" fill="#172527">HUMAN INPUT REQUIRED</text>
+    <text x="26" y="185" class="body">Reviews claim, math, filing quote,</text><text x="26" y="218" class="body">retrieval trail, and rationale</text><text x="26" y="269" class="body">Output: accept / reject /</text><text x="26" y="302" class="body">needs review</text>
+  </g>
+  <path class="arrow" d="M1535 980 H1600"/>
+  <g transform="translate(1615 770)">
+    <rect class="box" width="500" height="420" rx="18"/><rect width="500" height="12" fill="#172527"/>
+    <text x="26" y="48" class="num" fill="#172527">09</text><text x="26" y="94" class="head">Human Sign-Off + Report</text>
+    <text x="26" y="142" class="tag" fill="#172527">HUMAN INPUT REQUIRED</text>
+    <text x="26" y="185" class="body">Named reviewer + decision + note</text><text x="26" y="218" class="body">+ timestamp + integrity digest</text><text x="26" y="269" class="body">Output: versioned evidence trail</text><text x="26" y="302" class="body">with unresolved items preserved</text>
+  </g>
+
+  <text x="85" y="1328" class="foot">Models propose interpretations. Deterministic code calculates and validates. A human makes the final decision.</text>
+</svg>
