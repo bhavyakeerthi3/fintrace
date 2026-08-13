@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import evaluation from "./evaluation-data.json";
 import promptData from "./prompt-data.json";
@@ -223,7 +224,7 @@ export default function Home() {
         <nav className="nav shell" aria-label="Primary navigation">
           <a className="brand" href="#top" aria-label="FinTrace home"><span>F</span>FINTRACE</a>
           <button className="mobile-menu-button" type="button" aria-expanded={mobileNavOpen} aria-label="Toggle navigation" onClick={() => setMobileNavOpen((open) => !open)}><i /><i /></button>
-          <div className={`nav-links ${mobileNavOpen ? "open" : ""}`}><a href="#method" onClick={() => setMobileNavOpen(false)}>Method</a><a href="#workspace" onClick={() => setMobileNavOpen(false)}>Judge demo</a><a href="#evaluation" onClick={() => setMobileNavOpen(false)}>Evaluation</a><a href="#prompts" onClick={() => setMobileNavOpen(false)}>Prompts</a><a href="#calculator" onClick={() => setMobileNavOpen(false)}>Calculator</a><Link href="/architecture">Architecture</Link></div>
+          <div className={`nav-links ${mobileNavOpen ? "open" : ""}`}><a href="#method" onClick={() => setMobileNavOpen(false)}>Method</a><a href="#workspace" onClick={() => setMobileNavOpen(false)}>Judge demo</a><a href="#evaluation" onClick={() => setMobileNavOpen(false)}>Evaluation</a><a href="#prompts" onClick={() => setMobileNavOpen(false)}>Prompts</a><a href="#calculator" onClick={() => setMobileNavOpen(false)}>Calculator</a><a href="#architecture" onClick={() => setMobileNavOpen(false)}>Architecture</a></div>
           <button className="nav-cta" onClick={runDemo}>Run demo <ArrowIcon /></button>
         </nav>
 
@@ -303,7 +304,9 @@ export default function Home() {
         <div className="inspector-grid"><aside aria-label="Prompt stages" role="tablist">{promptData.map((item, index) => <button type="button" role="tab" aria-selected={promptIndex === index} className={promptIndex === index ? "active" : ""} onClick={() => setPromptIndex(index)} key={item.id}><span>{String(index + 1).padStart(2, "0")}</span><strong>{item.stage.replaceAll("_", " ")}</strong><small>v{item.version}</small></button>)}</aside><article role="tabpanel"><div className="call-label">{prompt.call_type}</div><div className="prompt-meta"><div><span>Stage</span><strong>{prompt.stage.replaceAll("_", " ")}</strong></div><div><span>Model</span><strong>{prompt.model}</strong></div><div><span>Temperature</span><strong>{prompt.temperature.toFixed(1)}</strong></div><div><span>Prompt version</span><strong>{prompt.version}</strong></div></div><h3>Purpose</h3><p className="prompt-purpose">{prompt.purpose}</p><h3>System instruction</h3><pre>{prompt.system_instruction}</pre><div className="prompt-columns"><div><h3>Input</h3><pre>{JSON.stringify(prompt.input_contract, null, 2)}</pre></div><div><h3>Structured output</h3><pre>{JSON.stringify(prompt.sample_output, null, 2)}</pre></div></div><h3>Expected JSON schema</h3><pre>{JSON.stringify(prompt.expected_json_schema, null, 2)}</pre><div className="validation-result"><span>VALIDATION RESULT</span><strong>{prompt.validation_result}</strong></div></article></div>
       </section>
 
-      <section className="refusals"><div className="shell"><div className="section-kicker light"><span>07</span><p>Where FinTrace refuses to guess</p></div><h2>Unresolved is a feature.</h2><div className="refusal-grid">{[
+      <section className="architecture-preview" id="architecture"><div className="shell"><div className="section-kicker"><span>07</span><p>System architecture</p></div><div className="architecture-preview-head"><div><h2>The complete evidence chain.</h2><p>Follow every handoff from raw transcript and filing data to scoped model calls, authoritative Python calculations, fail-closed validation, and named human sign-off.</p></div><Link href="/architecture">Read each role in detail <ArrowIcon /></Link></div><div className="architecture-preview-frame" role="region" aria-label="Scrollable FinTrace system architecture diagram" tabIndex={0}><Image src="/fintrace-ml-workflow.svg" alt="FinTrace eight-stage system architecture separating LLM calls, deterministic Python, evidence validation, analyst review, and human sign-off" width={2400} height={1500} sizes="(max-width: 760px) 1050px, 100vw" /></div><div className="architecture-legend"><span><i className="legend-llm" />LLM proposes</span><span><i className="legend-code" />Python calculates and validates</span><span><i className="legend-human" />Human decides</span><a href="/fintrace-ml-workflow.png" target="_blank" rel="noreferrer">Open full-size PNG</a></div></div></section>
+
+      <section className="refusals"><div className="shell"><div className="section-kicker light"><span>08</span><p>Where FinTrace refuses to guess</p></div><h2>Unresolved is a feature.</h2><div className="refusal-grid">{[
         ["Insufficient filing data", "The filing names an effect but does not quantify it."],
         ["Plausible but unsupported", "The explanation sounds reasonable but is absent from the filing."],
         ["Quote cannot be validated", "A proposed quotation is not found in the supplied corpus."],
