@@ -64,29 +64,30 @@ def _load_live_single_prompt(path: Path) -> dict:
 def write_ui_data(bundle: dict, single_prompt: dict) -> None:
     reference = bundle["deterministic_reference"]
     live = bundle["live_run"]
+    execution = live.get("execution", {})
     summary = {
         "suite_version": reference["suite_version"],
-        "provider": reference["provider"],
         "case_count": reference["case_count"],
         "finding_count": reference["finding_count"],
         "integrity_checks": reference["integrity_checks"],
-        "ablations": {name: data["metrics"] for name, data in reference["ablations"].items()},
+        "historical_ablation": {
+            "composite_control_index_formula": reference["ablations"]["single_prompt"]["metrics"]["composite_control_index_formula"],
+        },
         "live_run": {
             "model": live["model"],
             "temperature": live["temperature"],
             "run_timestamp": live["run_timestamp"],
+            "api_call_count": len(execution.get("executions", [])),
+            "retry_event_count": len(execution.get("retry_events", [])),
             "metrics": live["metrics"],
-            "comparisons": live["comparisons"],
         },
         "live_single_prompt": {
-            "provider": single_prompt["provider"],
             "model": single_prompt["model"],
             "temperature": single_prompt["temperature"],
             "run_timestamp": single_prompt["run_started_at"],
             "api_call_count": single_prompt["api_call_count"],
             "usage": single_prompt["usage"],
             "metrics": single_prompt["grading"]["metrics"],
-            "outputs": single_prompt["grading"]["outputs"],
         },
     }
     (APP / "evaluation-data.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")

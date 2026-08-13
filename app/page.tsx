@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import evaluation from "./evaluation-data.json";
 import promptData from "./prompt-data.json";
 
@@ -106,7 +106,7 @@ export default function Home() {
   const prompt = promptData[promptIndex];
   const baseline = evaluation.live_single_prompt.metrics;
   const fintrace = evaluation.live_run.metrics;
-  const deterministicAblation = evaluation.ablations.single_prompt;
+  const historicalAblation = evaluation.historical_ablation;
   const correctGain = fintrace.correct_classifications - baseline.correct_classifications;
   const pointGain = (fintrace.classification_accuracy - baseline.classification_accuracy).toFixed(1);
   const priorValue = Number(priorRevenue);
@@ -119,9 +119,11 @@ export default function Home() {
 
   function playTourClick(force = false) {
     if (!tourSoundEnabled && !force) return;
-    const context = audioContextRef.current ?? new AudioContext();
+    if (!("AudioContext" in window)) return;
+
+    const context = audioContextRef.current ?? new window.AudioContext();
     audioContextRef.current = context;
-    if (context.state === "suspended") void context.resume();
+    if (context.state === "suspended") void context.resume().catch(() => undefined);
 
     const duration = 0.035;
     const frameCount = Math.floor(context.sampleRate * duration);
@@ -140,10 +142,14 @@ export default function Home() {
     filter.Q.value = 0.8;
     gain.gain.setValueAtTime(0.055, context.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + duration);
-    source.buffer = buffer;
-    source.connect(filter).connect(gain).connect(context.destination);
-    source.start();
-    source.stop(context.currentTime + duration);
+    try {
+      source.buffer = buffer;
+      source.connect(filter).connect(gain).connect(context.destination);
+      source.start();
+      source.stop(context.currentTime + duration);
+    } catch {
+      // Audio is optional; tour navigation must still work if playback is unavailable.
+    }
   }
 
   useEffect(() => {
@@ -162,10 +168,10 @@ export default function Home() {
   }, [running]);
 
   useEffect(() => () => {
-    if (audioContextRef.current) void audioContextRef.current.close();
+    if (audioContextRef.current) void audioContextRef.current.close().catch(() => undefined);
   }, []);
 
-  const progress = useMemo(() => Math.max(0, ((activeStage + 1) / stages.length) * 100), [activeStage]);
+  const progress = Math.max(0, ((activeStage + 1) / stages.length) * 100);
   function runDemo() {
     if (running) return;
     setMobileNavOpen(false);
@@ -274,7 +280,7 @@ export default function Home() {
       <section className="benchmark" id="evaluation"><div className="shell">
         <div className="section-kicker light"><span>03</span><p>Measured controlled benchmark</p></div>
         <div className="evaluation-head"><div><h2>Same evidence. Different controls.</h2><p>{evaluation.case_count} controlled fictional cases containing {evaluation.finding_count} independently evaluated findings. Both headline runs used {evaluation.live_single_prompt.model} at temperature {evaluation.live_single_prompt.temperature.toFixed(1)}.</p><div className="lift-pills"><span>+{correctGain} correct findings</span><span>+{pointGain} percentage points</span></div></div><div className="headline-scores"><div><span>Live Single Prompt</span><strong>{formatPct(baseline.classification_accuracy)}%</strong><small>{baseline.correct_classifications} / {baseline.finding_count} correct</small></div><div><span>Live Full FinTrace</span><strong>{formatPct(fintrace.classification_accuracy)}%</strong><small>{fintrace.correct_classifications} / {fintrace.finding_count} correct</small></div></div></div>
-        <div className="run-facts"><div className="run-facts-head"><div><span>RECORDED FULL-PIPELINE RUN</span><strong>Audit the result, not just the headline.</strong></div><small>Token usage and estimated cost were not persisted for this run.</small></div><div className="run-facts-grid"><div><span>Model</span><strong>{evaluation.live_run.model}</strong></div><div><span>Temperature</span><strong>{evaluation.live_run.temperature.toFixed(1)}</strong></div><div><span>Timestamp</span><strong>{evaluation.live_run.run_timestamp.slice(0, 10)} UTC</strong></div><div><span>LLM calls</span><strong>5 batched calls</strong></div><div><span>Logged retries</span><strong>7 HTTP 429 retries</strong></div><div><span>Benchmark scope</span><strong>12 cases | 13 findings</strong></div></div><div className="artifact-actions"><a href="/downloads/benchmark" download>Benchmark JSON</a><a href="/downloads/single-prompt" download>Raw baseline JSON</a><a href="/downloads/sample-report" download>Sample report PDF</a><a href="/fintrace-ml-workflow.svg" target="_blank" rel="noreferrer">Workflow diagram</a><a href="/downloads/documentation" download>Documentation</a></div></div>
+        <div className="run-facts"><div className="run-facts-head"><div><span>RECORDED FULL-PIPELINE RUN</span><strong>Audit the result, not just the headline.</strong></div><small>Token usage and estimated cost were not persisted for this run.</small></div><div className="run-facts-grid"><div><span>Model</span><strong>{evaluation.live_run.model}</strong></div><div><span>Temperature</span><strong>{evaluation.live_run.temperature.toFixed(1)}</strong></div><div><span>Timestamp</span><strong>{evaluation.live_run.run_timestamp.slice(0, 10)} UTC</strong></div><div><span>LLM calls</span><strong>{evaluation.live_run.api_call_count} batched calls</strong></div><div><span>Logged retries</span><strong>{evaluation.live_run.retry_event_count} HTTP 429 retries</strong></div><div><span>Benchmark scope</span><strong>{evaluation.case_count} cases | {evaluation.finding_count} findings</strong></div></div><div className="artifact-actions"><a href="/downloads/benchmark" download>Benchmark JSON</a><a href="/downloads/single-prompt" download>Raw baseline JSON</a><a href="/downloads/sample-report" download>Sample report PDF</a><a href="/fintrace-ml-workflow.svg" target="_blank" rel="noreferrer">Workflow diagram</a><a href="/downloads/documentation" download>Documentation</a></div></div>
         <div className="metric-grid">{[
           ["Classification accuracy", baseline.classification_accuracy, fintrace.classification_accuracy, "%"],
           ["Unsupported-explanation count", baseline.unsupported_explanations, fintrace.unsupported_explanations, ""],
@@ -283,7 +289,7 @@ export default function Home() {
         ].map(([label, base, full, suffix]) => <div className="metric-card" key={String(label)}><span>{label}</span><div><small>Single</small><strong>{suffix === "%" ? `${formatPct(Number(base))}%` : base}</strong></div><div><small>FinTrace</small><strong>{suffix === "%" ? `${formatPct(Number(full))}%` : full}</strong></div></div>)}</div>
         <div className="ablation"><div className="panel-label">Live comparison | separately graded raw outputs <span>suite v{evaluation.suite_version}</span></div><table><thead><tr><th>Workflow</th><th>Correct</th><th>Classification accuracy</th><th>Unsupported explanations</th><th>Unresolved-item accuracy</th><th>False positives</th></tr></thead><tbody><tr><td>live single prompt</td><td>{baseline.correct_classifications}/{baseline.finding_count}</td><td>{formatPct(baseline.classification_accuracy)}%</td><td>{baseline.unsupported_explanations}</td><td>{baseline.correct_unresolved_items}/{baseline.expected_unresolved_items} ({formatPct(baseline.unresolved_item_accuracy)}%)</td><td>{baseline.false_positives}</td></tr><tr><td>live full FinTrace</td><td>{fintrace.correct_classifications}/{fintrace.finding_count}</td><td>{formatPct(fintrace.classification_accuracy)}%</td><td>{fintrace.unsupported_explanations}</td><td>{fintrace.correct_unresolved_items}/{fintrace.expected_unresolved_items} ({formatPct(fintrace.unresolved_item_accuracy)}%)</td><td>{fintrace.false_positives}</td></tr></tbody></table></div>
         <p className="benchmark-note"><b>Reproducible formula:</b> classification accuracy = correct classifications / {evaluation.finding_count} findings x 100. Integrity checks verified {evaluation.integrity_checks.percentages_checked} percentage calculations before this artifact was generated. Results are limited to this controlled fictional benchmark and are not a claim of general model performance.</p>
-        <details className="metric-clarification"><summary>Why older results showed 55.6, 61.5%, and 74.9</summary><p>55.6 and 74.9 are composite control-index points from the deterministic ablation. The earlier 61.5% was also produced by that simulated ablation, not a live single-prompt call. The current live single-prompt measurement is {formatPct(baseline.classification_accuracy)}%. Historical formula: {deterministicAblation.composite_control_index_formula}.</p></details>
+        <details className="metric-clarification"><summary>Why older results showed 55.6, 61.5%, and 74.9</summary><p>55.6 and 74.9 are composite control-index points from the deterministic ablation. The earlier 61.5% was also produced by that simulated ablation, not a live single-prompt call. The current live single-prompt measurement is {formatPct(baseline.classification_accuracy)}%. Historical formula: {historicalAblation.composite_control_index_formula}.</p></details>
       </div></section>
 
       <section className="single-prompt"><div className="shell"><div className="section-kicker light"><span>04</span><p>Why not a single prompt?</p></div><div className="single-prompt-grid"><article><span>LIVE SINGLE PROMPT</span><h2>Can identify a plausible explanation.</h2><p>In this run it missed one exact acquisition explanation, flagged one within-tolerance case, and accepted one adjustment that did not reconcile numerically.</p></article><article><span>FINTRACE</span><h2>Adds explicit gates.</h2><ul><li>Requires deterministic calculation</li><li>Retrieves filing evidence</li><li>Requires direct relevance</li><li>Validates the quotation</li><li>Preserves unresolved cases</li><li>Requires human review</li></ul></article></div><p className="benchmark-note">This comparison describes one recorded run on a controlled fictional benchmark. It does not claim that every multi-step workflow is always better.</p></div></section>
