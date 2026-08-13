@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from fintrace.__main__ import build_parser, load_local_environment
 from fintrace.evaluation import evaluate_benchmark_bundle, evaluate_suite, load_benchmark, validate_benchmark_integrity
 from fintrace.pipeline import approve_report, run_case
 from fintrace.prompts import PROMPT_VERSION, SECOND_PASS_REVIEWER, SPECIALISTS, PromptValidationError, prompt_manifest, validate_prompt_output
@@ -27,6 +29,28 @@ BENCHMARK = ROOT / "fixtures" / "benchmark-suite.json"
 
 
 class FinTraceTests(unittest.TestCase):
+    def test_local_environment_loads_without_overwriting_shell_values(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            env_file = Path(temp_dir) / ".env.local"
+            env_file.write_text(
+                "FINTRACE_LLM_MODEL=file-model\nFINTRACE_LLM_API_KEY=file-key\n",
+                encoding="utf-8",
+            )
+            with patch.dict(
+                "os.environ",
+                {"FINTRACE_LLM_MODEL": "shell-model"},
+                clear=True,
+            ):
+                load_local_environment(env_file)
+                args = build_parser().parse_args(["benchmark", "--provider", "live"])
+                self.assertEqual(args.model, "shell-model")
+                self.assertEqual(os.environ["FINTRACE_LLM_API_KEY"], "file-key")
+
+    def test_cli_uses_configured_live_model(self) -> None:
+        with patch.dict("os.environ", {"FINTRACE_LLM_MODEL": "configured-model"}):
+            args = build_parser().parse_args(["benchmark", "--provider", "live"])
+        self.assertEqual(args.model, "configured-model")
+
     def test_ingest_align_normalizes_claim_contract(self) -> None:
         case = json.loads(FIXTURE.read_text(encoding="utf-8"))
         claims = ingest_and_align(case)["claims"]

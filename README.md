@@ -278,15 +278,16 @@ Run the same 12-case / 13-finding suite through a configured live model and writ
 ```bash
 export FINTRACE_LLM_API_KEY="..."
 export FINTRACE_LLM_ENDPOINT="https://api.openai.com/v1/chat/completions"
-python -m fintrace benchmark --provider live --model gpt-5-mini --temperature 0
+export FINTRACE_LLM_MODEL="gpt-5-mini"
+python -m fintrace benchmark --provider live --temperature 0
 ```
 
-On PowerShell, set the variables with `$env:FINTRACE_LLM_API_KEY` and `$env:FINTRACE_LLM_ENDPOINT`. The live command never falls back to the deterministic provider: missing credentials, transport failures, invalid JSON, and schema violations return a non-zero exit and do not write a result file.
+On PowerShell, set the variables with `$env:FINTRACE_LLM_API_KEY`, `$env:FINTRACE_LLM_ENDPOINT`, and `$env:FINTRACE_LLM_MODEL`. Alternatively, copy `.env.example` to `.env.local`; the Python CLI loads simple `KEY=VALUE` entries from that file without overriding variables already set by the shell. The live command never falls back to the deterministic provider: missing credentials, transport failures, invalid JSON, and schema violations return a non-zero exit and do not write a result file.
 
 Use a configured live provider:
 
 ```bash
-python -m fintrace demo --provider live --model gpt-5-mini --temperature 0
+python -m fintrace demo --provider live --temperature 0
 ```
 
 Record a decision for one finding:
@@ -363,7 +364,8 @@ Generated outputs:
 
 - `outputs/fintrace-benchmark-results.json` - complete measured results;
 - `outputs/fintrace-single-prompt-live-results.json` - verbatim raw live baseline responses, usage, metadata, and separate grading;
-- `outputs/fintrace-ml-workflow.png` - submission-ready ML workflow;
+- `public/fintrace-ml-workflow.png` - submission-ready PNG workflow;
+- `public/fintrace-ml-workflow.svg` - scalable workflow used by the architecture page;
 - `outputs/fintrace-samples.html` - case-by-case deterministic-reference vs. live-model comparison;
 - `outputs/fintrace-samples.pdf` - printable side-by-side comparison artifact.
 

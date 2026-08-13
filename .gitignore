@@ -4,6 +4,9 @@ __pycache__/
 .pytest_cache/
 .venv/
 outputs/*
+!outputs/fintrace-benchmark-results.json
+!outputs/fintrace-samples.html
+!outputs/fintrace-samples.pdf
 !outputs/fintrace-single-prompt-live-results.json
 work/
 tmp/

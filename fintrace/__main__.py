@@ -2,12 +2,29 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 from .evaluation import evaluate_benchmark_bundle
 from .pipeline import approve_report, run_case
 from .prompts import prompt_manifest
 from .providers import LiveLLMProvider, LocalDeterministicProvider, ProviderError
+
+
+def load_local_environment(path: Path = Path(".env.local")) -> None:
+    """Load simple local environment entries without replacing shell values."""
+
+    if not path.exists():
+        return
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key:
+            os.environ.setdefault(key, value)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -18,7 +35,7 @@ def build_parser() -> argparse.ArgumentParser:
     demo.add_argument("--case", type=Path, default=Path("fixtures/fictional-demo.json"))
     demo.add_argument("--output", type=Path, default=Path("outputs/fintrace-demo-report.json"))
     demo.add_argument("--provider", choices=("local", "live"), default="local")
-    demo.add_argument("--model", default="gpt-5-mini")
+    demo.add_argument("--model", default=os.getenv("FINTRACE_LLM_MODEL", "gpt-5-mini"))
     demo.add_argument("--temperature", type=float, default=0.0)
     demo.add_argument("--token-limit", type=int, default=1800)
 
@@ -26,7 +43,7 @@ def build_parser() -> argparse.ArgumentParser:
     benchmark.add_argument("--suite", type=Path, default=Path("fixtures/benchmark-suite.json"))
     benchmark.add_argument("--output", type=Path, default=Path("outputs/fintrace-benchmark-results.json"))
     benchmark.add_argument("--provider", choices=("local", "live"), default="local")
-    benchmark.add_argument("--model", default="gpt-5-mini")
+    benchmark.add_argument("--model", default=os.getenv("FINTRACE_LLM_MODEL", "gpt-5-mini"))
     benchmark.add_argument("--temperature", type=float, default=0.0)
     benchmark.add_argument("--token-limit", type=int, default=1800)
 
@@ -42,6 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
+    load_local_environment()
     args = build_parser().parse_args()
     try:
         if args.command == "demo":
