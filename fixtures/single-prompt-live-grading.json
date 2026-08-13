@@ -1,0 +1,90 @@
+{
+  "grading_version": "1.0",
+  "method": "Post-run rubric grading kept separate from the verbatim model output.",
+  "rubric": [
+    "EXPLAINED: the response accepts a specific supplied disclosure as directly resolving or reconciling the gap.",
+    "UNRESOLVED: the response says the inconsistency remains, asks for investigation or clarification, or offers only a tentative generic possibility.",
+    "ALIGNED: the response concludes there is no material inconsistency because the difference is within the supplied tolerance.",
+    "When a response mixes labels, grade its final operative conclusion. A proposed adjustment that does not bridge the stated gap is an unsupported EXPLAINED result."
+  ],
+  "decisions": [
+    {
+      "finding_id": "B01-F1",
+      "classification": "unresolved",
+      "output_excerpt": "To resolve this inconsistency, it would be necessary to review the calculation of organic growth in more detail",
+      "rationale": "The response identifies the gap but requires additional review and does not accept the unquantified acquisition wording as a reconciliation."
+    },
+    {
+      "finding_id": "B02-F1",
+      "classification": "explained",
+      "output_excerpt": "The discrepancy is resolved when considering the foreign-exchange translation effect",
+      "rationale": "The response accepts the specific 5 million dollar currency effect as reconciling 100 to 105."
+    },
+    {
+      "finding_id": "B03-F1",
+      "classification": "unresolved",
+      "output_excerpt": "a financial inconsistency that requires further explanation or clarification",
+      "rationale": "Although it notices the 20 million dollar acquisition contribution, its operative conclusion still requires clarification instead of accepting the exact reconciliation."
+    },
+    {
+      "finding_id": "B04-F1",
+      "classification": "explained",
+      "output_excerpt": "the filing provides the necessary information to understand and reconcile the discrepancy",
+      "rationale": "The response accepts the specific 10 million dollar divestiture disclosure as the reconciliation."
+    },
+    {
+      "finding_id": "B05-F1",
+      "classification": "explained",
+      "output_excerpt": "the financial inconsistency is resolved by the reclassification note",
+      "rationale": "The response explicitly accepts the 10 million dollar segment reclassification."
+    },
+    {
+      "finding_id": "B06-F1",
+      "classification": "explained",
+      "output_excerpt": "the financial inconsistency is due to the filing-derived value not accounting for the 5 million dollar increase",
+      "rationale": "The response accepts the specified 5 million dollar policy effect as the cause of the gap."
+    },
+    {
+      "finding_id": "B07-F1",
+      "classification": "explained",
+      "output_excerpt": "85 million dollars - 23 million dollars = 62 million dollars",
+      "rationale": "The response performs and accepts the exact restructuring-payment reconciliation."
+    },
+    {
+      "finding_id": "B08-F1",
+      "classification": "unresolved",
+      "output_excerpt": "the inconsistency between the transcript and the calculated operating margin warrants further review",
+      "rationale": "Despite noting that the result is within tolerance, the response still reports an inconsistency requiring review rather than concluding ALIGNED."
+    },
+    {
+      "finding_id": "B09-F1",
+      "classification": "unresolved",
+      "output_excerpt": "it only mentions an undrawn revolving credit facility of 30 million dollars, which does not directly contradict any information in the transcript",
+      "rationale": "The response rejects the unrelated debt disclosure and leaves the revenue discrepancy unresolved."
+    },
+    {
+      "finding_id": "B10-F1",
+      "classification": "unresolved",
+      "output_excerpt": "To resolve this inconsistency, it would be necessary to review the underlying data and calculations",
+      "rationale": "The response offers generic possible factors but explicitly requires further evidence."
+    },
+    {
+      "finding_id": "B11-F1",
+      "classification": "unresolved",
+      "output_excerpt": "without further information about the nature of these adjustments, it is difficult to determine the cause",
+      "rationale": "The response does not invent or accept the unavailable quotation."
+    },
+    {
+      "finding_id": "B12-F1",
+      "classification": "explained",
+      "output_excerpt": "The filing notes that the Adjusted EBITDA adds back $8 million of restructuring expense, which may be the cause of the discrepancy.",
+      "rationale": "The response accepts the 8 million dollar add-back for the 8 million dollar EBITDA gap."
+    },
+    {
+      "finding_id": "B12-F2",
+      "classification": "explained",
+      "output_excerpt": "The cash payments of $3 million required for the restructuring program may have reduced the Adjusted Free Cash Flow",
+      "rationale": "The response presents the 3 million dollar cash payment as explaining a 5 million dollar gap; this is an unsupported explanation because it does not reconcile numerically."
+    }
+  ]
+}
