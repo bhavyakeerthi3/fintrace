@@ -208,11 +208,6 @@ a { text-decoration: none; }
 .filing-card { padding: 18px; border: 1px solid var(--line); border-radius: 2px; background: var(--panel-2); }
 .filing-card div { display: grid; gap: 7px; }
 .verified { max-width: 210px; color: #41634f; font-size: 12px; font-weight: 650; line-height: 1.4; text-align: right; }
-.baseline-compare { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 16px; }
-.baseline-compare > div { padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-soft); }
-.baseline-compare > div > span, .baseline-compare small { display: block; color: var(--muted); font: 11px var(--mono); letter-spacing: .05em; text-transform: uppercase; }
-.baseline-compare strong { display: block; margin: 10px 0 7px; }
-.baseline-compare small { color: var(--pink); }
 .verdict-comparison { margin-top: 18px; border: 1px solid var(--line); background: var(--bg-soft); }
 .comparison-title { min-height: 43px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 15px; border-bottom: 1px solid var(--line); }
 .comparison-title span, .comparison-title strong { font: 10px var(--mono); letter-spacing: .07em; text-transform: uppercase; }
@@ -470,7 +465,7 @@ a { text-decoration: none; }
   .claim-tab { min-height: 130px; }
   .evidence-panel { border-top: 8px solid var(--bg); }
   .evidence-panel > :not(.panel-label) { margin-inline: 20px; }
-  .baseline-compare, .why-panel dl, .why-math { grid-template-columns: 1fr; }
+  .why-panel dl, .why-math { grid-template-columns: 1fr; }
   .comparison-columns { grid-template-columns: 1fr; }
   .comparison-columns > article + article { border-top: 1px solid var(--line); border-left: 0; }
   .signoff { align-items: flex-start; flex-direction: column; }
