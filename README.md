@@ -20,7 +20,7 @@ Filing reconciliation:  none found
 Final result:            UNRESOLVED
 ```
 
-FinTrace is an evidence-first financial review pipeline built for the Reverie Hacks 2026 ML Prompt Engineering track. It compares statements from an earnings call with filed financial data, recomputes numerical claims in code, searches the filing for legitimate explanations, and preserves every decision for human review.
+FinTrace is an independent evidence-first financial review pipeline. It compares statements from an earnings call with filed financial data, recomputes numerical claims in code, searches the filing for legitimate explanations, and preserves every decision for human review.
 
 The included case uses a clearly labeled fictional company. FinTrace describes observable inconsistencies and does not infer intent or accuse a company or person of wrongdoing.
 
@@ -79,6 +79,8 @@ Specialists can identify the same underlying issue in different ways. The aggreg
 - retains the original source finding IDs.
 
 This prevents one issue from appearing several times in the final report.
+
+Aggregation is deterministic Python, not an active LLM call. The repository retains `aggregator_v1` as an inspectable future prompt contract, but the live pipeline currently uses `aggregate_findings` / `deterministic-deduplicator`. The controlled live benchmark therefore makes five model calls: four scope-isolated specialist calls and one second-pass call.
 
 ### 4. Recompute numerical claims in code
 
@@ -156,17 +158,22 @@ The fixture demonstrates three distinct outcomes:
 | --- | ---: | ---: | --- |
 | Organic revenue growth | 23.0% | 12.73% | Unresolved after filing review |
 | Adjusted free cash flow | $85m | $62m before adjustment | Explained by a validated $23m filing adjustment |
-| Irrelevant disclosure trap (B09) | $130m | $100m | Single Prompt: explained; FinTrace and expected: unresolved |
+| Non-reconciling cash-flow adjustment (B12-F2) | $45m | $40m | Live Single Prompt: explained; FinTrace and expected: unresolved |
 
-The third case makes a baseline failure visible: an undrawn $30 million credit facility contains a matching number but does not relate to revenue, so FinTrace rejects it as an explanation.
+The third case is the measured baseline failure: the live single prompt treats a $3 million restructuring cash payment as an explanation for a $5 million adjusted-free-cash-flow gap. FinTrace rejects it because the evidence is not directly tied to that claim and `$40m + $3m = $43m`, not `$45m`.
+
+B09-F1 remains in the full benchmark as a relevance-gate example where both the live single prompt and FinTrace correctly reject an unrelated $30 million debt disclosure.
 
 ## Why not a single prompt?
 
 The controlled benchmark demonstrates a specific difference in workflow behavior:
 
 ```text
-Single prompt
-    -> can identify a plausible explanation
+Live single prompt
+    -> 10 / 13 correct in the recorded run
+    -> missed one exact explanation
+    -> flagged one within-tolerance item
+    -> accepted one non-reconciling adjustment
 
 FinTrace
     -> requires deterministic calculation
@@ -223,14 +230,17 @@ fintrace/
   providers.py            Local and live model-provider implementations
   evaluation.py           Baseline, ablation, and benchmark scoring
 prompts/
-  *_v1.json               Six inspectable versioned prompt contracts
+  *_v1.json               Six contracts: five active calls plus the unwired aggregator contract
 fixtures/
   fictional-demo.json     Fictional transcript, filing, and disclosures
   benchmark-suite.json    12 controlled cases with expected outcomes
+  single-prompt-live-grading.json  Separate rubric grading for raw baseline output
 schema/
   report-schema.json      Machine-readable report contract
 scripts/
   generate_artifacts.py   Workflow image, UI data, HTML, and PDF generator
+  run_single_prompt_baseline.py  Unstructured live baseline runner
+  grade_single_prompt_baseline.py  Separate post-run rubric grader
 tests/
   test_pipeline.py        Pipeline, safety, validation, and sign-off tests
 ```
@@ -318,21 +328,21 @@ The release gate includes Python tests, ESLint, the Next.js production build, JS
 
 The repository includes 12 controlled fictional cases containing 13 independently evaluated findings. They cover unexplained gaps, currency, acquisitions, divestitures, segment reclassification, accounting-policy changes, one-time adjustments, tolerance, irrelevant and generic disclosures, invalid quotations, and overlapping evidence.
 
-The result file keeps two independent sections:
+The full-pipeline result file keeps two independent sections:
 
 - `deterministic_reference` is the unchanged, reproducible local-provider baseline, including its four ablations;
 - `live_run` contains the live model name, temperature, UTC run timestamp, per-finding outputs, and independently computed metrics.
 
-The sections are never averaged or blended. The deterministic reference currently reports:
+The sections are never averaged or blended. A separate genuine single-prompt run used the same live model and temperature as the full workflow. It made 12 case-level calls covering all 13 findings without a JSON schema, specialist scope, or workflow gates:
 
 ```text
-Single Prompt:  8 / 13 correct = 61.5% classification accuracy
-Full FinTrace: 13 / 13 correct = 100.0% classification accuracy
+Live Single Prompt: 10 / 13 correct = 76.9% classification accuracy
+Live Full FinTrace: 13 / 13 correct = 100.0% classification accuracy
 
-Difference: +5 correct findings and +38.5 percentage points
+Difference: +3 correct findings and +23.1 percentage points
 ```
 
-The percentages are generated from per-finding results. Artifact generation verifies every numerator, denominator, count, and reported percentage before writing HTML, PDF, or UI data. It also requires a validated `live_run`; any missing run or metric mismatch fails generation.
+The raw baseline responses are preserved verbatim in `outputs/fintrace-single-prompt-live-results.json`. Rubric grading is stored separately from those responses. The earlier `8 / 13 = 61.5%` value remains only inside the deterministic ablation record; it is not presented as a live single-prompt measurement.
 
 Earlier builds displayed `55.6` and `74.9` as if they were headline accuracy percentages. They are retained only as a **composite control index**, measured in points out of 100 and not as classification accuracy:
 
@@ -347,11 +357,12 @@ mean(
 )
 ```
 
-The public benchmark now leads with direct classification accuracy and places this composite index in a labeled methodology disclosure.
+The public benchmark now leads with the live 76.9% versus 100.0% comparison and places the simulated ablation and composite index in a labeled methodology disclosure.
 
 Generated outputs:
 
 - `outputs/fintrace-benchmark-results.json` - complete measured results;
+- `outputs/fintrace-single-prompt-live-results.json` - verbatim raw live baseline responses, usage, metadata, and separate grading;
 - `outputs/fintrace-ml-workflow.png` - submission-ready ML workflow;
 - `outputs/fintrace-samples.html` - case-by-case deterministic-reference vs. live-model comparison;
 - `outputs/fintrace-samples.pdf` - printable side-by-side comparison artifact.
