@@ -26,6 +26,7 @@ from fintrace.prompts import PROMPT_REGISTRY  # noqa: E402
 OUTPUTS = ROOT / "outputs"
 APP = ROOT / "app"
 SUITE = ROOT / "fixtures" / "benchmark-suite.json"
+SINGLE_PROMPT_RESULTS = OUTPUTS / "fintrace-single-prompt-live-results.json"
 RESISTANCE_CASES = {"B08", "B09", "B10", "B11", "B12"}
 DESIGN_BOUNDARY = (
     "The Python engine (fintrace/) is the authoritative implementation. The public Next.js page "
@@ -50,7 +51,17 @@ def _load_validated_bundle(path: Path) -> dict:
     return bundle
 
 
-def write_ui_data(bundle: dict) -> None:
+def _load_live_single_prompt(path: Path) -> dict:
+    run = json.loads(path.read_text(encoding="utf-8"))
+    grading = run.get("grading")
+    if not isinstance(grading, dict) or not isinstance(grading.get("metrics"), dict):
+        raise ValueError("Live single-prompt artifact must contain completed, separate grading")
+    if run.get("finding_count") != 13 or grading["metrics"].get("finding_count") != 13:
+        raise ValueError("Live single-prompt artifact must cover all 13 findings")
+    return run
+
+
+def write_ui_data(bundle: dict, single_prompt: dict) -> None:
     reference = bundle["deterministic_reference"]
     live = bundle["live_run"]
     summary = {
@@ -60,13 +71,22 @@ def write_ui_data(bundle: dict) -> None:
         "finding_count": reference["finding_count"],
         "integrity_checks": reference["integrity_checks"],
         "ablations": {name: data["metrics"] for name, data in reference["ablations"].items()},
-        "comparisons": reference["comparisons"],
         "live_run": {
             "model": live["model"],
             "temperature": live["temperature"],
             "run_timestamp": live["run_timestamp"],
             "metrics": live["metrics"],
             "comparisons": live["comparisons"],
+        },
+        "live_single_prompt": {
+            "provider": single_prompt["provider"],
+            "model": single_prompt["model"],
+            "temperature": single_prompt["temperature"],
+            "run_timestamp": single_prompt["run_started_at"],
+            "api_call_count": single_prompt["api_call_count"],
+            "usage": single_prompt["usage"],
+            "metrics": single_prompt["grading"]["metrics"],
+            "outputs": single_prompt["grading"]["outputs"],
         },
     }
     (APP / "evaluation-data.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
@@ -80,11 +100,15 @@ def write_ui_data(bundle: dict) -> None:
             "input_contract": spec["input_contract"],
             "expected_json_schema": spec["output_schema"],
             "scope_restrictions": spec["scope_restrictions"],
-            "sample_output": {"explained": [], "unresolved": [{"finding_id": "B01-F1", "reasoning": "No filing disclosure directly reconciles the numerical difference."}]} if name == "second_pass" else {"findings": []},
-            "call_type": "LLM CALL",
-            "model": "provider selected / local deterministic adapter",
+            "sample_output": {"explained": [], "unresolved": [{"finding_id": "B12-F2", "reasoning": "The $3m cash payment does not reconcile the $5m adjusted-free-cash-flow gap."}]} if name == "second_pass" else {"findings": []},
+            "call_type": "PROMPT CONTRACT - NOT WIRED" if name == "aggregator" else "LLM CALL",
+            "model": "deterministic-deduplicator" if name == "aggregator" else "provider selected / local deterministic adapter",
             "temperature": 0.0,
-            "validation_result": "PASS - structured output is checked against the versioned JSON schema",
+            "validation_result": (
+                "CONTRACT ONLY - current execution uses deterministic aggregate_findings"
+                if name == "aggregator"
+                else "PASS - structured output is checked against the versioned JSON schema"
+            ),
         }
         for name, spec in PROMPT_REGISTRY.items()
     ]
@@ -258,7 +282,8 @@ def verify_artifacts(bundle: dict) -> dict[str, int | str]:
 def main() -> None:
     OUTPUTS.mkdir(parents=True, exist_ok=True)
     bundle = _load_validated_bundle(OUTPUTS / "fintrace-benchmark-results.json")
-    write_ui_data(bundle)
+    single_prompt = _load_live_single_prompt(SINGLE_PROMPT_RESULTS)
+    write_ui_data(bundle, single_prompt)
     write_html(bundle)
     write_pdf(bundle)
     artifact_verification = verify_artifacts(bundle)
