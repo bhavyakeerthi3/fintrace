@@ -34,6 +34,8 @@ The benchmark uses fictional companies and controlled disclosures.
 
 [Download the submission-ready PNG](public/fintrace-ml-workflow.png) or open the [scalable SVG](public/fintrace-ml-workflow.svg).
 
+For a timed walkthrough, use the [90-second judge-tour script](docs/90-second-tour-script.md).
+
 ### 1. Ingest and align
 
 The pipeline loads structured transcript claims and filing data. Every claim is normalized into a common record containing:

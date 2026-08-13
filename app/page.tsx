@@ -72,8 +72,9 @@ const tourSteps: TourStep[] = [
   { title: "Accept a supported explanation", body: "Case two demonstrates a valid result: the exact $23m disclosure bridges $62m to $85m and the filing quote validates.", target: "#workspace", claimIndex: 1 },
   { title: "Reject a plausible mismatch", body: "Case three is the decisive baseline failure. A $3m cash item cannot explain a $5m gap, so FinTrace keeps it unresolved.", target: "#workspace", claimIndex: 2, showWhy: true },
   { title: "Read the measured comparison", body: "The two live runs stay separate: 10/13 for the single prompt and 13/13 for the full workflow on this controlled suite.", target: "#evaluation" },
-  { title: "Inspect the prompt contracts", body: "Every scope, instruction, model setting, input contract, output schema, and validation result is visible.", target: "#prompts", promptIndex: 0 },
   { title: "Try deterministic math", body: "Change the filed values or claimed percentage. The browser recomputes the result locally without an LLM call.", target: "#calculator" },
+  { title: "Inspect the prompt contracts", body: "Every scope, instruction, model setting, input contract, output schema, and validation result is visible.", target: "#prompts", promptIndex: 0 },
+  { title: "Trace the system architecture", body: "Four scoped LLM calls propose candidates. Python deduplicates and recalculates. A second pass proposes a verdict, deterministic gates validate the evidence, and a human signs off.", target: "#architecture" },
 ];
 
 function StatusMark({ status }: { status: ResultStatus }) {
