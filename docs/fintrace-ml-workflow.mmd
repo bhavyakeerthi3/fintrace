@@ -1,0 +1,78 @@
+%%{init: {"flowchart": {"curve": "stepAfter", "nodeSpacing": 40, "rankSpacing": 55}, "themeVariables": {"fontSize": "18px", "fontFamily": "Arial, sans-serif"}}}%%
+flowchart TB
+    subgraph ROW1[" "]
+    direction LR
+    INPUT["INPUT<br/>Earnings-call transcript + filed financial data<br/>Controlled benchmark: 12 cases / 13 findings"]
+
+    S1["1. INGEST & ALIGN<br/>DETERMINISTIC PYTHON<br/>Adapter: ingest_and_align<br/>Maps claims, speakers, periods, metrics, and filing references"]
+
+    subgraph SG2["2. SPECIALIST CALLS - LLM"]
+        direction TB
+        S2IN["Aligned claims + filing corpus<br/>Benchmark sends all 12 cases in one batch per scope"]
+        REV["Revenue specialist<br/>revenue_v1<br/>LiveLLMProvider<br/>llama-3.3-70b-versatile, T=0"]
+        CASH["Cash-flow specialist<br/>cash_flow_v1<br/>LiveLLMProvider<br/>llama-3.3-70b-versatile, T=0"]
+        RP["Related-party specialist<br/>related_party_v1<br/>LiveLLMProvider<br/>llama-3.3-70b-versatile, T=0"]
+        LANG["Language specialist<br/>language_v1<br/>LiveLLMProvider<br/>llama-3.3-70b-versatile, T=0"]
+        S2OUT["Schema-validated candidate findings<br/>with scope provenance"]
+        S2IN --> REV --> S2OUT
+        S2IN --> CASH --> S2OUT
+        S2IN --> RP --> S2OUT
+        S2IN --> LANG --> S2OUT
+    end
+
+    S3["3. AGGREGATE & DEDUPE<br/>DETERMINISTIC PYTHON - NOT AN LLM CALL<br/>Adapter: aggregate_findings / deterministic-deduplicator<br/>Groups by claim identity, preserves sources, assigns stable IDs"]
+    end
+
+    subgraph ROW2[" "]
+    direction LR
+    S4["4. CODE CALCULATION<br/>DETERMINISTIC PYTHON - AUTHORITATIVE MATH<br/>Adapter: reconcile_claims + attach_calculations v1.0<br/>Computes value, gap, tolerance result, and filing references"]
+
+    S5["5. FILING RETRIEVAL<br/>DETERMINISTIC PYTHON<br/>Adapter: retrieve_filing_evidence v1.0<br/>Ranks filing passages and claim-linked disclosures"]
+
+    subgraph SG6["6. SECOND-PASS<br/>VALIDATION"]
+        direction TB
+        LLM2["Second-pass reviewer - LLM<br/>second_pass_v1<br/>LiveLLMProvider<br/>llama-3.3-70b-versatile, T=0<br/>Proposes EXPLAINED or UNRESOLVED"]
+        QV["Quote + relevance gate<br/>DETERMINISTIC PYTHON<br/>validate_explanation_quotes<br/>Exact quote present? Directly related? Numerical gap reconciled?"]
+        OK["Validated result<br/>EXPLAINED"]
+        FAIL["Fail closed<br/>UNRESOLVED"]
+        LLM2 -->|"proposed decision + quote/reasoning"| QV
+        QV -->|"all required gates pass"| OK
+        QV -->|"missing, unrelated, or non-reconciling evidence"| FAIL
+    end
+    end
+
+    subgraph ROW3[" "]
+    direction LR
+    S7["7. ANALYST REVIEW<br/>HUMAN INPUT REQUIRED<br/>Evidence chain + neutral risk memo<br/>Analyst chooses accept, reject, or needs_review"]
+
+    S8["8. HUMAN SIGN-OFF<br/>HUMAN INPUT REQUIRED<br/>Named reviewer + note + timestamp<br/>Final judgment remains outside the model"]
+
+    OUTPUT["OUTPUT<br/>Versioned JSON report + evidence trail + review state<br/>Explained findings and preserved unresolved findings"]
+    end
+
+    INPUT -->|"raw claims and filing content"| S1
+    S1 -->|"aligned claims + filing references"| S2IN
+    S2OUT -->|"candidate findings by specialist scope"| S3
+    S3 -->|"deduplicated findings + provenance"| S4
+    S4 -->|"code-derived values + gaps + tolerances"| S5
+    S5 -->|"findings + calculations + candidate passages + full filing"| LLM2
+    OK -->|"validated explanation package"| S7
+    FAIL -->|"unresolved evidence package"| S7
+    S7 -->|"analyst decision and note"| S8
+    S8 -->|"signed review record"| OUTPUT
+
+    classDef llm fill:#dbeafe,stroke:#2563eb,color:#0f172a,stroke-width:2px;
+    classDef code fill:#fef3c7,stroke:#d97706,color:#0f172a,stroke-width:2px;
+    classDef human fill:#dcfce7,stroke:#16a34a,color:#0f172a,stroke-width:2px;
+    classDef unresolved fill:#fee2e2,stroke:#dc2626,color:#0f172a,stroke-width:2px;
+    classDef io fill:#f1f5f9,stroke:#475569,color:#0f172a,stroke-width:2px;
+
+    class REV,CASH,RP,LANG,LLM2 llm;
+    class S1,S3,S4,S5,QV code;
+    class S7,S8 human;
+    class FAIL unresolved;
+    class INPUT,OUTPUT,S2IN,S2OUT,OK io;
+
+    style ROW1 fill:transparent,stroke:transparent
+    style ROW2 fill:transparent,stroke:transparent
+    style ROW3 fill:transparent,stroke:transparent
