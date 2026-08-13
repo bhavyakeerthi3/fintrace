@@ -355,10 +355,10 @@
     "sample_output": {
       "findings": []
     },
-    "call_type": "LLM CALL",
-    "model": "provider selected / local deterministic adapter",
+    "call_type": "PROMPT CONTRACT - NOT WIRED",
+    "model": "deterministic-deduplicator",
     "temperature": 0.0,
-    "validation_result": "PASS - structured output is checked against the versioned JSON schema"
+    "validation_result": "CONTRACT ONLY - current execution uses deterministic aggregate_findings"
   },
   {
     "stage": "second_pass",
@@ -427,8 +427,8 @@
       "explained": [],
       "unresolved": [
         {
-          "finding_id": "B01-F1",
-          "reasoning": "No filing disclosure directly reconciles the numerical difference."
+          "finding_id": "B12-F2",
+          "reasoning": "The $3m cash payment does not reconcile the $5m adjusted-free-cash-flow gap."
         }
       ]
     },
