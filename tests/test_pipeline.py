@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fintrace.evaluation import evaluate_benchmark_bundle, evaluate_suite, load_benchmark, validate_benchmark_integrity
 from fintrace.pipeline import approve_report, run_case
@@ -230,6 +231,30 @@ class FinTraceTests(unittest.TestCase):
         provider.api_key = ""
         with self.assertRaisesRegex(ProviderError, "FINTRACE_LLM_API_KEY"):
             evaluate_benchmark_bundle(BENCHMARK, provider)
+
+    def test_raw_single_prompt_call_has_no_schema_or_system_message(self) -> None:
+        class Response:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def read(self):
+                return json.dumps({
+                    "choices": [{"message": {"content": "Verbatim baseline response."}}],
+                    "usage": {"prompt_tokens": 5, "completion_tokens": 3, "total_tokens": 8},
+                }).encode("utf-8")
+
+        provider = LiveLLMProvider(model="scripted-live", temperature=0, api_key="test-only")
+        with patch("urllib.request.urlopen", return_value=Response()) as request_call:
+            result = provider.raw_prompt_call("Exact baseline prompt")
+        request = request_call.call_args.args[0]
+        body = json.loads(request.data.decode("utf-8"))
+        self.assertNotIn("response_format", body)
+        self.assertEqual(body["messages"], [{"role": "user", "content": "Exact baseline prompt"}])
+        self.assertEqual(result["raw_output"], "Verbatim baseline response.")
+        self.assertEqual(result["usage"]["total_tokens"], 8)
 
     def test_live_benchmark_keeps_reference_and_revalidates_quotes(self) -> None:
         class ScriptedLiveProvider(LiveLLMProvider):

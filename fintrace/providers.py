@@ -178,3 +178,72 @@ class LiveLLMProvider(ModelProvider):
         if prompt not in {"second_pass", PROMPT_REGISTRY["second_pass"]["system_instruction"]}:
             raise ProviderError("Unknown second-pass prompt")
         return self._execute("second_pass", payload or {}, model, temperature)
+
+    def raw_prompt_call(self, prompt: str, stage: str = "single_prompt_baseline") -> dict[str, Any]:
+        """Run one unstructured user prompt without a schema or JSON response constraint."""
+
+        if not self.api_key:
+            raise ProviderError("FINTRACE_LLM_API_KEY is required for live execution")
+        requested_at = datetime.now(UTC).isoformat()
+        body = json.dumps({
+            "model": self.model,
+            "temperature": self.temperature,
+            "max_tokens": self.token_limit,
+            "messages": [{"role": "user", "content": prompt}],
+        }).encode("utf-8")
+        request = urllib.request.Request(
+            self.endpoint,
+            data=body,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": "FinTrace/0.2",
+            },
+            method="POST",
+        )
+        for attempt in range(6):
+            try:
+                with urllib.request.urlopen(request, timeout=90) as response:
+                    raw = json.loads(response.read().decode("utf-8"))
+                content = raw["choices"][0]["message"]["content"]
+                usage = raw.get("usage", {})
+                break
+            except urllib.error.HTTPError as error:
+                try:
+                    detail = error.read().decode("utf-8", errors="replace")
+                    parsed = json.loads(detail)
+                    detail = str(parsed.get("error", {}).get("message", detail))
+                except (OSError, TypeError, json.JSONDecodeError):
+                    detail = error.reason or "no response detail"
+                retry_match = re.search(r"try again in\s+([0-9.]+)(ms|s)", detail, flags=re.IGNORECASE)
+                if error.code == 429 and retry_match and attempt < 5:
+                    parsed_delay = float(retry_match.group(1)) / 1000 if retry_match.group(2).casefold() == "ms" else float(retry_match.group(1))
+                    delay = min(parsed_delay + 1.0, 60.0)
+                    self.retry_events.append({
+                        "stage": stage,
+                        "attempt": attempt + 1,
+                        "http_status": 429,
+                        "delay_seconds": round(delay, 3),
+                        "recorded_at": datetime.now(UTC).isoformat(),
+                    })
+                    time.sleep(delay)
+                    continue
+                raise ProviderError(f"Live model execution failed with HTTP {error.code}: {detail[:500]}") from error
+            except (OSError, KeyError, IndexError, TypeError, json.JSONDecodeError) as error:
+                raise ProviderError(f"Live model execution failed: {error}") from error
+        completed_at = datetime.now(UTC).isoformat()
+        self.executions.append({
+            "stage": stage,
+            "model": self.model,
+            "prompt_version": "single-prompt-baseline-v1",
+            "temperature": self.temperature,
+            "token_limit": self.token_limit,
+            "executed_at": completed_at,
+        })
+        return {
+            "raw_output": str(content),
+            "usage": dict(usage) if isinstance(usage, dict) else {},
+            "requested_at": requested_at,
+            "completed_at": completed_at,
+        }
